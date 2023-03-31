@@ -11,11 +11,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  url_strategy: ^0.2.0
   cupertino_icons: ^1.0.2
-  get:
-  http:
+  flutter_form_builder: ^7.8.0
+  http: ^0.13.5
+  form_builder_validators: ^8.5.0
+  intl: ^0.17.0
   web_socket_channel:
   flutter_svg:
+  js:
+  get:
 
 dev_dependencies:
   flutter_test:
@@ -25,6 +30,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/messages.json

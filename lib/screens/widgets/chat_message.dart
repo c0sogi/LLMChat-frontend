@@ -56,7 +56,11 @@ class ChatMessage extends StatelessWidget {
                       int index = entry.key;
                       String part = entry.value;
                       if (index % 2 == 0) {
-                        return Text(part);
+                        return Text(part,
+                            style: TextStyle(
+                              color:
+                                  isGptSpeaking ? Colors.black : Colors.white,
+                            ),);
                       } else {
                         final languageMatch =
                             RegExp(r'^(\w+)\n').firstMatch(messageParts[index]);
@@ -110,7 +114,7 @@ class CodeBlock extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  language ?? "Code",
+                  language ?? "코드",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -133,7 +137,7 @@ class CodeBlock extends StatelessWidget {
                         );
                       },
                       child: const Text(
-                        'Copy Text',
+                        '복사',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),

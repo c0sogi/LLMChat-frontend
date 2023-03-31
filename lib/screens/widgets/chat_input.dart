@@ -7,21 +7,63 @@ class ChatInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chatController = Get.find<ChatController>();
     return Container(
       padding: const EdgeInsets.all(8),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: chatController.messageController,
-              decoration: InputDecoration(
-                hintText: '여기에 메시지를 입력하세요',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+            child: Column(
+              children: [
+                TextField(
+                  focusNode: Get.find<ChatController>().messageFocusNode,
+                  controller: Get.find<ChatController>().messageController,
+                  decoration: InputDecoration(
+                    hintText: '여기에 메시지를 입력하세요',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onSubmitted: (text) {
+                    // assure that the focus on the textfield is not removed
+                    FocusScope.of(context).requestFocus(
+                        Get.find<ChatController>().messageFocusNode);
+                    Get.find<ChatController>().sendMessage();
+                  },
                 ),
-              ),
-              onSubmitted: (text) => chatController.sendMessage(),
+                Obx(
+                  () => Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Upload audio button
+                      IconButton(
+                        onPressed: () =>
+                            Get.find<ChatController>().uploadAudio(),
+                        icon: const Icon(Icons.mic),
+                        tooltip: '음원 업로드',
+                      ),
+                      // Upload image button
+                      IconButton(
+                        onPressed: () =>
+                            Get.find<ChatController>().uploadImage(),
+                        icon: const Icon(Icons.image),
+                        tooltip: '사진 업로드',
+                      ),
+                      // Expanded box
+                      Expanded(
+                        child: Container(),
+                      ),
+                      const Text('영어로 번역'),
+                      Switch(
+                        value:
+                            Get.find<ChatController>().isTranslateToggled.value,
+                        onChanged: (value) {
+                          Get.find<ChatController>().toggleTranslate();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 8),

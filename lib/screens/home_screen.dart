@@ -10,21 +10,23 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('ChatGPT App'),
+      ),
+      drawer: Drawer(
+        child: Container(
+          color: Colors.grey[200],
+          child: const ConversationList(),
+        ),
+      ),
       body: Row(
         children: [
-          Expanded(
-            flex: 1,
-            child: Container(
-              color: Colors.grey[200],
-              child: const ConversationList(),
-            ),
-          ),
           Expanded(
             flex: 3,
             child: GetBuilder<ChatController>(
               init: Get.find<ChatController>(),
               builder: (controller) {
-                if (controller.isConnected) {
+                if (true) {
                   return const ChatScreen();
                 } else {
                   return const Center(

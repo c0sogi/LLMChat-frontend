@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:web_socket_channel/html.dart';
@@ -18,43 +17,60 @@ class Message {
 }
 
 class ChatController extends GetxController {
-  TextEditingController messageController = TextEditingController();
-  ScrollController scrollController = ScrollController();
-
-  // scroll event listener
-
+  late HtmlWebSocketChannel channel;
+  final String baseUrl = "ws://localhost:8000/ws/chatgpt";
+  static const String startMessageWith = "\n\n";
+  static const String endMessageWith = "\n\n\n";
+  RxBool isTranslateToggled = false.obs;
+  RxList<Message> messages = <Message>[].obs;
   bool autoScroll = true;
   bool isConnected = false;
   bool isTalking = false;
   double scrollOffset = 0;
-  static const String startMessageWith = "\n\n";
-  static const String endMessageWith = "\n\n\n";
+  TextEditingController messageController = TextEditingController();
+  FocusNode messageFocusNode = FocusNode();
+  ScrollController scrollController = ScrollController();
 
-  RxList<Message> messages = <Message>[].obs;
-  late HtmlWebSocketChannel channel = HtmlWebSocketChannel.connect(
-      'wss://YOUR_API_URL');
-
-  @override
-  void onInit() {
-    super.onInit();
-    connectWebSocket();
+  void beginChat(String token) {
+    // check channel is late initialized or not
+    try {
+      channel.sink.close();
+    } catch (e) {
+      print("channel is not initialized");
+    }
+    channel = HtmlWebSocketChannel.connect(
+      "$baseUrl/$token",
+    );
+    onConnectWebSocket();
     scrollController.addListener(scrollCallback);
   }
 
-  void connectWebSocket() {
+  void toggleTranslate() {
+    isTranslateToggled(!isTranslateToggled.value);
+    update();
+  }
+
+  void uploadImage() {}
+  void uploadAudio() {}
+
+  void onConnectWebSocket() {
     try {
       isConnected = true;
-      messages.add(
-        Message(
-          message: '안녕하세요! 무엇을 도와드릴까요?',
-          isGptSpeaking: true,
-          isFinished: true,
-        ),
+      channel.stream.listen(
+        (message) => handleMessage(message),
+        onDone: () {
+          print("Websocket connection closed");
+          isConnected = false;
+          update();
+        },
+        onError: (e) {
+          print("Websocket connection error: $e");
+          isConnected = false;
+          update();
+        },
       );
-      channel.stream.listen((message) {
-        handleMessage(message);
-      });
     } catch (e) {
+      print("connectWebsocket Error: $e");
       messages.add(Message(
         message: e.toString(),
         isGptSpeaking: true,
@@ -62,6 +78,13 @@ class ChatController extends GetxController {
       ));
       isConnected = false;
     }
+    messages.add(
+      Message(
+        message: '안녕하세요! 무엇을 도와드릴까요?',
+        isGptSpeaking: true,
+        isFinished: true,
+      ),
+    );
     update();
   }
 
@@ -120,7 +143,18 @@ class ChatController extends GetxController {
   void sendMessage() {
     if (messageController.text.isNotEmpty && !isTalking) {
       // Send message to GPT, json format: {"user_message": "Hello GPT!"}
-      channel.sink.add(jsonEncode({"user_message": messageController.text}));
+      // check if channel is initialized or not
+      try {
+        channel.sink.add(jsonEncode({"user_message": messageController.text}));
+      } catch (e) {
+        print("channel is not initialized");
+        messages.add(Message(
+          message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
+          isGptSpeaking: true,
+          isFinished: true,
+        ));
+        return;
+      }
       messages.add(
         Message(
           message: messageController.text,
@@ -143,8 +177,19 @@ class ChatController extends GetxController {
             .lastWhere((element) => element.isGptSpeaking == false)
             .message
             .value;
-        channel.sink.add(jsonEncode({"user_message": "/retry"}));
-        channel.sink.add(jsonEncode({"user_message": lastUserMessage}));
+        try {
+          channel.sink.add(jsonEncode({"user_message": "/retry"}));
+          channel.sink.add(jsonEncode({"user_message": lastUserMessage}));
+        } catch (e) {
+          print("channel is not initialized");
+          messages.add(Message(
+            message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
+            isGptSpeaking: true,
+            isFinished: true,
+          ));
+          return;
+        }
+
         messages[messages.length - 1].isFinished(false);
         update();
         print("message resent");
@@ -158,7 +203,17 @@ class ChatController extends GetxController {
     // Implement clear chat logic
     if (!isTalking) {
       messages.clear();
-      channel.sink.add(jsonEncode({"user_message": "/clear"}));
+      try {
+        channel.sink.add(jsonEncode({"user_message": "/clear"}));
+      } catch (e) {
+        print("channel is not initialized");
+        messages.add(Message(
+          message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
+          isGptSpeaking: true,
+          isFinished: true,
+        ));
+        return;
+      }
       update();
       print("chat cleared");
     }
