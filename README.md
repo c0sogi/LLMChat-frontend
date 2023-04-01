@@ -1,4 +1,7 @@
-# frontend
+# ChatGPT Flutter App
+<p align="center">
+<img src="https://user-images.githubusercontent.com/121936784/229271053-82d18934-631e-4e37-b661-bd620fb3a899.gif">
+</p>
 
 A new Flutter project.
 
