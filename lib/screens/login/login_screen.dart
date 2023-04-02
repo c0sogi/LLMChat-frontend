@@ -216,7 +216,8 @@ class ApiKeysList extends StatelessWidget {
                 style: TextStyle(color: Colors.white70),
               ),
               onTap: () async {
-                await loginController.logout();
+                await loginController.deleteToken();
+                chatController.endChat();
               },
             ),
           ),
@@ -235,6 +236,8 @@ class ApiKeysList extends StatelessWidget {
                   onTap: () {
                     // Save the selected API key for later use and show a Snackbar for visual confirmation
                     loginController.selectedApiKey(apiKey['access_key']);
+                    // pop all dialogs until the root dialog is reached
+                    Get.back();
                     Get.snackbar(
                         'API Key Selected', '${apiKey['user_memo']}가 선택되었습니다.');
                     chatController.beginChat(apiKey['access_key']);

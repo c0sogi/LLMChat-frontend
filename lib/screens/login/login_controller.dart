@@ -18,7 +18,7 @@ class LoginController extends GetxController {
   final RxString jwtToken = ''.obs;
   final RxList<dynamic> apiKeys = <dynamic>[].obs;
   final RxString selectedApiKey = ''.obs;
-final RxBool isRemembered = false.obs;
+  final RxBool isRemembered = false.obs;
   final RxString username = "".obs;
 
   // variables
@@ -108,7 +108,7 @@ final RxBool isRemembered = false.obs;
         : Get.snackbar('Error', '로그인에 실패하였습니다.');
   }
 
-  Future<void> logout() async {
+  Future<void> deleteToken() async {
     jwtToken("");
     await _authService.deleteToken();
   }

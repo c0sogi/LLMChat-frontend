@@ -62,6 +62,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialBinding: AppBinding(),
       home: const HomeScreen(),
+      routes: {
+        '/home': (context) => const HomeScreen(),
+      }
     );
   }
 }

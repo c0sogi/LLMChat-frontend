@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import './widgets/conversation_list.dart';
-import './chat/chat_controller.dart';
 import './chat/chat_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -20,21 +18,10 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       body: Row(
-        children: [
+        children: const [
           Expanded(
             flex: 3,
-            child: GetBuilder<ChatController>(
-              init: Get.find<ChatController>(),
-              builder: (controller) {
-                if (true) {
-                  return const ChatScreen();
-                } else {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-              },
-            ),
+            child: ChatScreen(),
           ),
         ],
       ),
