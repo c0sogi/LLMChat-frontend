@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:web_socket_channel/html.dart';
 
+import '../../app/app_config.dart';
+
 class Message {
   RxString message;
   RxBool isFinished;
@@ -17,19 +19,49 @@ class Message {
 }
 
 class ChatController extends GetxController {
+  // controllers
+  late TextEditingController messageController;
+  late ScrollController scrollController;
+  late FocusNode messageFocusNode;
   late HtmlWebSocketChannel channel;
-  final String baseUrl = "ws://localhost:8000/ws/chatgpt";
-  static const String startMessageWith = "\n\n";
-  static const String endMessageWith = "\n\n\n";
-  RxBool isTranslateToggled = false.obs;
-  RxList<Message> messages = <Message>[].obs;
-  bool autoScroll = true;
-  bool isConnected = false;
-  bool isTalking = false;
-  double scrollOffset = 0;
-  TextEditingController messageController = TextEditingController();
-  FocusNode messageFocusNode = FocusNode();
-  ScrollController scrollController = ScrollController();
+
+  // observers
+  late final RxBool isTranslateToggled;
+  late final RxList<Message> messages;
+
+  // variables
+  late bool autoScroll;
+  late bool isConnected;
+  late bool isTalking;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // initialize controllers
+    messageController = TextEditingController();
+    scrollController = ScrollController();
+    scrollController.addListener(scrollCallback);
+    messageFocusNode = FocusNode();
+
+    // initialize observers
+    isTranslateToggled = false.obs;
+    messages = <Message>[].obs;
+
+    // initialize variables
+    autoScroll = true;
+    isConnected = false;
+    isTalking = false;
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+    // unregister controllers
+    messageController.dispose();
+    scrollController.dispose();
+    messageFocusNode.dispose();
+    channel.sink.close();
+  }
 
   void beginChat(String token) {
     // check channel is late initialized or not
@@ -39,19 +71,10 @@ class ChatController extends GetxController {
       print("channel is not initialized");
     }
     channel = HtmlWebSocketChannel.connect(
-      "$baseUrl/$token",
+      "${Config.webSocketUrl}/$token",
     );
     onConnectWebSocket();
-    scrollController.addListener(scrollCallback);
   }
-
-  void toggleTranslate() {
-    isTranslateToggled(!isTranslateToggled.value);
-    update();
-  }
-
-  void uploadImage() {}
-  void uploadAudio() {}
 
   void onConnectWebSocket() {
     try {
@@ -71,11 +94,13 @@ class ChatController extends GetxController {
       );
     } catch (e) {
       print("connectWebsocket Error: $e");
-      messages.add(Message(
-        message: e.toString(),
-        isGptSpeaking: true,
-        isFinished: true,
-      ));
+      messages.add(
+        Message(
+          message: e.toString(),
+          isGptSpeaking: true,
+          isFinished: true,
+        ),
+      );
       isConnected = false;
     }
     messages.add(
@@ -106,15 +131,16 @@ class ChatController extends GetxController {
 
   void scrollCallback() {
     if (scrollController.hasClients) {
-      scrollController.offset + 100 >= scrollController.position.maxScrollExtent
+      scrollController.offset + Config.scrollOffset >=
+              scrollController.position.maxScrollExtent
           ? autoScroll = true
           : autoScroll = false;
     }
   }
 
-  void handleMessage(String message) {
+  void handleMessage(dynamic message) {
     switch (message) {
-      case startMessageWith:
+      case "\n\n":
         // GPT starts speaking
         print("GPT start speaking");
         isTalking = true;
@@ -126,16 +152,28 @@ class ChatController extends GetxController {
           ),
         );
         break;
-      case endMessageWith:
+      case "\n\n\n":
         // GPT stops speaking
         print("GPT stopped speaking");
         isTalking = false;
-        messages[messages.length - 1].isFinished(true);
+        try {
+          final Message lastUnfinishedMessage = messages
+              .lastWhere((element) => element.isFinished.value == false);
+          lastUnfinishedMessage.isFinished(true);
+        } on StateError {
+          print("no message to update");
+        }
         scrollToBottom(animated: true);
         break;
       default:
-        messages[messages.length - 1]
-            .message("${messages[messages.length - 1].message.value}$message");
+        try {
+          final Message lastUnfinishedMessage = messages
+              .lastWhere((element) => element.isFinished.value == false);
+          lastUnfinishedMessage
+              .message(lastUnfinishedMessage.message.value + message);
+        } on StateError {
+          print("no message to update");
+        }
     }
     update();
   }
@@ -182,15 +220,16 @@ class ChatController extends GetxController {
           channel.sink.add(jsonEncode({"user_message": lastUserMessage}));
         } catch (e) {
           print("channel is not initialized");
-          messages.add(Message(
-            message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
-            isGptSpeaking: true,
-            isFinished: true,
-          ));
+          messages.add(
+            Message(
+              message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
+              isGptSpeaking: true,
+              isFinished: true,
+            ),
+          );
           return;
         }
 
-        messages[messages.length - 1].isFinished(false);
         update();
         print("message resent");
       } catch (e) {
@@ -207,11 +246,13 @@ class ChatController extends GetxController {
         channel.sink.add(jsonEncode({"user_message": "/clear"}));
       } catch (e) {
         print("channel is not initialized");
-        messages.add(Message(
-          message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
-          isGptSpeaking: true,
-          isFinished: true,
-        ));
+        messages.add(
+          Message(
+            message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
+            isGptSpeaking: true,
+            isFinished: true,
+          ),
+        );
         return;
       }
       update();
@@ -219,10 +260,15 @@ class ChatController extends GetxController {
     }
   }
 
-  @override
-  void onClose() {
-    messageController.dispose();
-    channel.sink.close();
-    super.onClose();
+  void toggleTranslate() {
+    isTranslateToggled(!isTranslateToggled.value);
+    update();
+  }
+
+  void uploadImage() {
+    // TODO: Implement upload image logic
+  }
+  void uploadAudio() {
+    // TODO: Implement upload audio logic
   }
 }

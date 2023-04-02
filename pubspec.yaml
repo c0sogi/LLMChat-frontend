@@ -17,10 +17,11 @@ dependencies:
   http: ^0.13.5
   form_builder_validators: ^8.5.0
   intl: ^0.17.0
-  web_socket_channel:
-  flutter_svg:
-  js:
-  get:
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  web_socket_channel: ^2.3.0
+  flutter_svg: ^2.0.4
+  get: ^4.6.5
 
 dev_dependencies:
   flutter_test:

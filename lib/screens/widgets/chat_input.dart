@@ -26,69 +26,89 @@ class ChatInput extends StatelessWidget {
                   onSubmitted: (text) {
                     // assure that the focus on the textfield is not removed
                     FocusScope.of(context).requestFocus(
-                        Get.find<ChatController>().messageFocusNode);
+                      Get.find<ChatController>().messageFocusNode,
+                    );
                     Get.find<ChatController>().sendMessage();
                   },
                 ),
-                Obx(
-                  () => Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // Upload audio button
-                      IconButton(
-                        onPressed: () =>
-                            Get.find<ChatController>().uploadAudio(),
-                        icon: const Icon(Icons.mic),
-                        tooltip: '음원 업로드',
-                      ),
-                      // Upload image button
-                      IconButton(
-                        onPressed: () =>
-                            Get.find<ChatController>().uploadImage(),
-                        icon: const Icon(Icons.image),
-                        tooltip: '사진 업로드',
-                      ),
-                      // Expanded box
-                      Expanded(
-                        child: Container(),
-                      ),
-                      const Text('영어로 번역'),
-                      Switch(
-                        value:
-                            Get.find<ChatController>().isTranslateToggled.value,
-                        onChanged: (value) {
-                          Get.find<ChatController>().toggleTranslate();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                const UploadButtons(),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                onPressed: () => Get.find<ChatController>().clearChat(),
-                icon: const Icon(Icons.clear_all),
-                tooltip: 'Clear chat',
-              ),
-              IconButton(
-                onPressed: () => Get.find<ChatController>().resendMessage(),
-                icon: const Icon(Icons.refresh),
-                tooltip: 'Resend message',
-              ),
-              IconButton(
-                onPressed: () => Get.find<ChatController>().sendMessage(),
-                icon: const Icon(Icons.send),
-                tooltip: 'Send',
-              ),
-            ],
+          const MessageButtons(),
+        ],
+      ),
+    );
+  }
+}
+
+class UploadButtons extends StatelessWidget {
+  const UploadButtons({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // Upload audio button
+          IconButton(
+            onPressed: () => Get.find<ChatController>().uploadAudio(),
+            icon: const Icon(Icons.mic),
+            tooltip: '음원 업로드',
+          ),
+          // Upload image button
+          IconButton(
+            onPressed: () => Get.find<ChatController>().uploadImage(),
+            icon: const Icon(Icons.image),
+            tooltip: '사진 업로드',
+          ),
+          // Expanded box
+          Expanded(
+            child: Container(),
+          ),
+          const Text('영어로 번역'),
+          Switch(
+            value: Get.find<ChatController>().isTranslateToggled.value,
+            onChanged: (value) {
+              Get.find<ChatController>().toggleTranslate();
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class MessageButtons extends StatelessWidget {
+  const MessageButtons({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        IconButton(
+          onPressed: () => Get.find<ChatController>().clearChat(),
+          icon: const Icon(Icons.clear_all),
+          tooltip: '채팅 초기화',
+        ),
+        IconButton(
+          onPressed: () => Get.find<ChatController>().resendMessage(),
+          icon: const Icon(Icons.refresh),
+          tooltip: '재전송',
+        ),
+        IconButton(
+          onPressed: () => Get.find<ChatController>().sendMessage(),
+          icon: const Icon(Icons.send),
+          tooltip: '전송',
+        ),
+      ],
     );
   }
 }

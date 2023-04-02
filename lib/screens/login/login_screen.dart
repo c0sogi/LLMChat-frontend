@@ -12,13 +12,12 @@ class LoginDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loginController = Get.put(LoginController());
     return Drawer(
       child: SingleChildScrollView(
         child: Obx(
-          () => loginController.jwtToken.value.isEmpty
-              ? LoginForm(loginController: loginController)
-              : ApiKeysList(loginController: loginController),
+          () => Get.find<LoginController>().jwtToken.value.isEmpty
+              ? const LoginForm()
+              : const ApiKeysList(),
         ),
       ),
     );
@@ -26,12 +25,7 @@ class LoginDrawer extends StatelessWidget {
 }
 
 class LoginForm extends StatelessWidget {
-  const LoginForm({
-    super.key,
-    required this.loginController,
-  });
-
-  final LoginController loginController;
+  const LoginForm({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,91 +36,14 @@ class LoginForm extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: FormBuilder(
-            key: loginController.formKey,
+            key: Get.find<LoginController>().formKey,
             child: Column(
-              children: [
-                FormBuilderTextField(
-                  name: 'email',
-                  decoration: const InputDecoration(
-                    labelText: '이메일',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  validator: FormBuilderValidators.compose([
-                    FormBuilderValidators.required(),
-                    FormBuilderValidators.email(),
-                  ]),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 20),
-                FormBuilderTextField(
-                  name: 'password',
-                  decoration: const InputDecoration(
-                    labelText: '비밀번호',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                  obscureText: true,
-                  validator: FormBuilderValidators.compose([
-                    FormBuilderValidators.required(),
-                    FormBuilderValidators.minLength(6),
-                  ]),
-                ),
-                const SizedBox(height: 20),
-                Obx(() {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 10),
-                            TextButton(
-                              onPressed: () async {
-                                if (loginController.formKey.currentState!
-                                    .validate()) {
-                                  loginController.isLoading.value = true;
-                                  await loginController.register(
-                                    loginController.formKey.currentState!
-                                        .fields['email']!.value,
-                                    loginController.formKey.currentState!
-                                        .fields['password']!.value,
-                                  );
-                                  loginController.isLoading.value = false;
-                                }
-                              },
-                              child: const Text('회원가입'),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: loginController.isLoading.value
-                            ? null
-                            : () async {
-                                if (loginController.formKey.currentState!
-                                    .validate()) {
-                                  loginController.isLoading.value = true;
-                                  await loginController.login(
-                                    loginController.formKey.currentState!
-                                        .fields['email']!.value,
-                                    loginController.formKey.currentState!
-                                        .fields['password']!.value,
-                                  );
-                                  loginController.isLoading.value = false;
-                                }
-                              },
-                        child: loginController.isLoading.value
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text('로그인'),
-                      ),
-                    ],
-                  );
-                }),
+              children: const [
+                EmailForm(),
+                SizedBox(height: 20),
+                PasswordForm(),
+                SizedBox(height: 20),
+                AuthButtons(),
               ],
             ),
           ),
@@ -136,40 +53,198 @@ class LoginForm extends StatelessWidget {
   }
 }
 
-class ApiKeysList extends StatelessWidget {
-  final LoginController loginController;
-
-  const ApiKeysList({super.key, required this.loginController});
+class AuthButtons extends StatelessWidget {
+  const AuthButtons({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // return const Text("Hello");
-    print("apiKeys: ${loginController.apiKeys.value}");
-    return Obx(() {
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: loginController.apiKeys.length,
-        itemBuilder: (context, index) {
-          final apiKey = loginController.apiKeys[index];
-          return Card(
-            child: ListTile(
-              title: Text(apiKey['user_memo']),
-              subtitle: Text(
-                DateFormat('yyyy-MM-dd hh:mm a')
-                    .format(DateTime.parse(apiKey['created_at'])),
+    final LoginController loginController = Get.find<LoginController>();
+    return Obx(
+      () => Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            // 로그인 유지 체크박스
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Checkbox(
+                  value: loginController.isRemembered.value,
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      loginController.isRemembered(value);
+                    }
+                  },
+                ),
+                const Text(
+                  '로그인 유지',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    // 회원가입 버튼
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 10),
+                        TextButton(
+                          onPressed: () async {
+                            if (loginController.formKey.currentState!
+                                .validate()) {
+                              loginController.isLoading.value = true;
+                              await loginController.register(
+                                loginController.formKey.currentState!
+                                    .fields['email']!.value,
+                                loginController.formKey.currentState!
+                                    .fields['password']!.value,
+                              );
+                              loginController.isLoading.value = false;
+                            }
+                          },
+                          child: const Text('회원가입'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              onTap: () {
-                // Save the selected API key for later use and show a Snackbar for visual confirmation
-                Get.find<LoginController>()
-                    .selectedApiKey(apiKey['access_key']);
-                Get.snackbar(
-                    'API Key Selected', '${apiKey['user_memo']}가 선택되었습니다.');
-                Get.find<ChatController>().beginChat(apiKey['access_key']);
+              ElevatedButton(
+                // 로그인 버튼
+                onPressed: loginController.isLoading.value
+                    ? null
+                    : () async {
+                        if (loginController.formKey.currentState!.validate()) {
+                          loginController.isLoading.value = true;
+                          await loginController.login(
+                            loginController
+                                .formKey.currentState!.fields['email']!.value,
+                            loginController.formKey.currentState!
+                                .fields['password']!.value,
+                          );
+                          loginController.isLoading.value = false;
+                        }
+                      },
+                child: loginController.isLoading.value
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : const Text('로그인'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class EmailForm extends StatelessWidget {
+  const EmailForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FormBuilderTextField(
+      name: 'email',
+      decoration: const InputDecoration(
+        labelText: '이메일',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.email),
+      ),
+      validator: FormBuilderValidators.compose([
+        FormBuilderValidators.required(errorText: "이메일은 필수입니다."),
+        FormBuilderValidators.email(errorText: "이메일 형식이 아닙니다."),
+      ]),
+      keyboardType: TextInputType.emailAddress,
+    );
+  }
+}
+
+class PasswordForm extends StatelessWidget {
+  const PasswordForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FormBuilderTextField(
+      name: 'password',
+      decoration: const InputDecoration(
+        labelText: '비밀번호',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.lock),
+      ),
+      obscureText: true,
+      validator: FormBuilderValidators.compose(
+        [
+          FormBuilderValidators.required(errorText: "비밀번호는 필수입니다."),
+          FormBuilderValidators.minLength(6, errorText: "비밀번호는 6자 이상입니다."),
+        ],
+      ),
+    );
+  }
+}
+
+class ApiKeysList extends StatelessWidget {
+  const ApiKeysList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final loginController = Get.find<LoginController>();
+    final chatController = Get.find<ChatController>();
+    return Obx(
+      () => Column(
+        children: [
+          Card(
+            color: Theme.of(context).primaryColor,
+            elevation: 5,
+            child: ListTile(
+              title: Text(
+                "${loginController.username}님 안녕하세요!",
+                style: const TextStyle(color: Colors.white),
+              ),
+              subtitle: const Text(
+                "여기를 눌러 로그아웃 하세요.",
+                style: TextStyle(color: Colors.white70),
+              ),
+              onTap: () async {
+                await loginController.logout();
               },
             ),
-          );
-        },
-      );
-    });
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: loginController.apiKeys.length,
+            itemBuilder: (context, index) {
+              final apiKey = loginController.apiKeys[index];
+              return Card(
+                child: ListTile(
+                  title: Text(apiKey['user_memo']),
+                  subtitle: Text(
+                    DateFormat('yyyy-MM-dd hh:mm a')
+                        .format(DateTime.parse(apiKey['created_at'])),
+                  ),
+                  onTap: () {
+                    // Save the selected API key for later use and show a Snackbar for visual confirmation
+                    loginController.selectedApiKey(apiKey['access_key']);
+                    Get.snackbar(
+                        'API Key Selected', '${apiKey['user_memo']}가 선택되었습니다.');
+                    chatController.beginChat(apiKey['access_key']);
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
