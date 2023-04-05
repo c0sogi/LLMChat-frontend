@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web/screens/login/login_screen.dart';
+import 'package:flutter_web/view/login/login_view.dart';
 
 class ConversationList extends StatelessWidget {
   const ConversationList({super.key});

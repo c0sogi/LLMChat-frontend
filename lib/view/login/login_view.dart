@@ -3,9 +3,8 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-// Add intl to your pubspec.yaml
-import '../chat/chat_controller.dart';
-import 'login_controller.dart';
+import '../../viewmodel/chat/chat_viewmodel.dart';
+import '../../viewmodel/login/login_viewmodel.dart';
 
 class LoginDrawer extends StatelessWidget {
   const LoginDrawer({super.key});
@@ -199,7 +198,7 @@ class ApiKeysList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loginController = Get.find<LoginController>();
-    final chatController = Get.find<ChatController>();
+    final chatController = Get.find<ChatViewModel>();
     return Obx(
       () => Column(
         children: [
@@ -233,15 +232,10 @@ class ApiKeysList extends StatelessWidget {
                     DateFormat('yyyy-MM-dd hh:mm a')
                         .format(DateTime.parse(apiKey['created_at'])),
                   ),
-                  onTap: () {
-                    // Save the selected API key for later use and show a Snackbar for visual confirmation
-                    loginController.selectedApiKey(apiKey['access_key']);
-                    // pop all dialogs until the root dialog is reached
-                    Get.back();
-                    Get.snackbar(
-                        'API Key Selected', '${apiKey['user_memo']}가 선택되었습니다.');
-                    chatController.beginChat(apiKey['access_key']);
-                  },
+                  onTap: () => loginController.onClickApiKey(
+                    accessKey: apiKey['access_key'],
+                    userMemo: apiKey['user_memo'],
+                  ),
                 ),
               );
             },

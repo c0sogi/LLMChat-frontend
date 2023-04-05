@@ -1,35 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_web/screens/chat/chat_controller.dart';
+import 'package:flutter_web/viewmodel/chat/scroll_viewmodel.dart';
 import 'package:get/get.dart';
+import '../../model/message/message_model.dart';
 
 class ChatMessage extends StatelessWidget {
-  final RxString message;
-  final RxBool isFinished;
-  final bool isGptSpeaking;
-  final ChatController chatController;
+  final Rx<MessageModel> message;
   const ChatMessage({
     super.key,
     required this.message,
-    required this.isGptSpeaking,
-    required this.isFinished,
-    required this.chatController,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      alignment: isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
+      alignment: message.value.isGptSpeaking
+          ? Alignment.centerLeft
+          : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
-        crossAxisAlignment:
-            isGptSpeaking ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+        crossAxisAlignment: message.value.isGptSpeaking
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.end,
         children: [
           Obx(
             () {
-              final messageParts = message.value.split('```');
+              final messageParts = message.value.message.split('```');
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                chatController.scrollToBottom(animated: true);
+                Get.find<ScrollViewModel>().scrollToBottom(animated: false);
               });
               return Container(
                   constraints: BoxConstraints(
@@ -38,14 +36,16 @@ class ChatMessage extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isGptSpeaking ? Colors.grey[300] : Colors.green[300],
+                    color: message.value.isGptSpeaking
+                        ? Colors.grey[300]
+                        : Colors.green[300],
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(12),
                       topRight: const Radius.circular(12),
-                      bottomLeft: isGptSpeaking
+                      bottomLeft: message.value.isGptSpeaking
                           ? const Radius.circular(0)
                           : const Radius.circular(12),
-                      bottomRight: isGptSpeaking
+                      bottomRight: message.value.isGptSpeaking
                           ? const Radius.circular(12)
                           : const Radius.circular(0),
                     ),
@@ -56,11 +56,14 @@ class ChatMessage extends StatelessWidget {
                       int index = entry.key;
                       String part = entry.value;
                       if (index % 2 == 0) {
-                        return Text(part,
-                            style: TextStyle(
-                              color:
-                                  isGptSpeaking ? Colors.black : Colors.white,
-                            ),);
+                        return Text(
+                          part,
+                          style: TextStyle(
+                            color: message.value.isGptSpeaking
+                                ? Colors.black
+                                : Colors.white,
+                          ),
+                        );
                       } else {
                         final languageMatch =
                             RegExp(r'^(\w+)\n').firstMatch(messageParts[index]);

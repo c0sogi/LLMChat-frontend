@@ -1,11 +1,21 @@
-import 'package:flutter_web/screens/login/login_controller.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_web/model/chat/scroll_model.dart';
+import 'package:flutter_web/viewmodel/chat/scroll_viewmodel.dart';
 import 'package:get/get.dart';
-import '../screens/chat/chat_controller.dart';
+import '../viewmodel/chat/chat_viewmodel.dart';
+import '../viewmodel/login/login_viewmodel.dart';
 
 class AppBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ChatController>(() => ChatController());
+    Get.put<ChatViewModel>(ChatViewModel());
     Get.put<LoginController>(LoginController());
+    Get.put<ScrollViewModel>(
+      ScrollViewModel(
+        scrollModel: ScrollModel(
+          scrollController: ScrollController(),
+        ),
+      ),
+    );
   }
 }

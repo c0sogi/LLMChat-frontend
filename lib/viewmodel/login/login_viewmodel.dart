@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_web/screens/login/login_storage.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../../app/app_config.dart';
+import '../chat/chat_viewmodel.dart';
+import '../../model/login/login_storage_model.dart';
 
 class LoginController extends GetxController {
   // controllers
@@ -54,6 +55,8 @@ class LoginController extends GetxController {
         'Authorization': jwtToken.value,
       },
     );
+    // TODO: statusCode가 401이고 internal_code가 6일 때는 토큰 만료임을 알려주기
+    // 만약 토큰 만료이면 토큰을 지우고 로그인 화면으로 이동
     response.statusCode == 200
         ? apiKeys.assignAll(jsonDecode(response.body))
         : Get.snackbar('Error', 'API 키를 불러오는데 실패하였습니다.');
@@ -68,6 +71,8 @@ class LoginController extends GetxController {
         'Authorization': jwtToken.value,
       },
     );
+    // TODO: statusCode가 401이고 internal_code가 6일 때는 토큰 만료임을 알려주기
+    // 만약 토큰 만료이면 토큰을 지우고 로그인 화면으로 이동
     response.statusCode == 200
         ? username(jsonDecode(response.body)['email'])
         : Get.snackbar('Error', '사용자 정보를 불러오는데 실패하였습니다.');
@@ -116,5 +121,18 @@ class LoginController extends GetxController {
   Future<void> loadJwtTokenFromLocalStorage() async {
     final storedToken = await _authService.getToken();
     storedToken == null ? jwtToken("") : onGetToken(storedToken);
+  }
+
+  void onClickApiKey({required String accessKey, required String userMemo}) {
+    // Save the selected API key for later use and show a Snackbar for visual confirmation
+    selectedApiKey(accessKey);
+    // pop all dialogs until the root dialog is reached
+    Get.back();
+    Get.snackbar('API Key Selected', '$userMemo가 선택되었습니다.');
+    Get.find<ChatViewModel>().beginChat(
+      apiKey: accessKey,
+      chatRoomId: 0,
+    );
+    update();
   }
 }

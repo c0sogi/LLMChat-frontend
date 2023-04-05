@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../chat/chat_controller.dart';
+import '../../viewmodel/chat/chat_viewmodel.dart';
 
 class ChatInput extends StatelessWidget {
   const ChatInput({super.key});
@@ -15,8 +15,8 @@ class ChatInput extends StatelessWidget {
             child: Column(
               children: [
                 TextField(
-                  focusNode: Get.find<ChatController>().messageFocusNode,
-                  controller: Get.find<ChatController>().messageController,
+                  focusNode: Get.find<ChatViewModel>().messageFocusNode,
+                  controller: Get.find<ChatViewModel>().messageController,
                   decoration: InputDecoration(
                     hintText: '여기에 메시지를 입력하세요',
                     border: OutlineInputBorder(
@@ -26,9 +26,9 @@ class ChatInput extends StatelessWidget {
                   onSubmitted: (text) {
                     // assure that the focus on the textfield is not removed
                     FocusScope.of(context).requestFocus(
-                      Get.find<ChatController>().messageFocusNode,
+                      Get.find<ChatViewModel>().messageFocusNode,
                     );
-                    Get.find<ChatController>().sendMessage();
+                    Get.find<ChatViewModel>().sendMessage();
                   },
                 ),
                 const UploadButtons(),
@@ -56,13 +56,13 @@ class UploadButtons extends StatelessWidget {
         children: [
           // Upload audio button
           IconButton(
-            onPressed: () => Get.find<ChatController>().uploadAudio(),
+            onPressed: () => Get.find<ChatViewModel>().uploadAudio(),
             icon: const Icon(Icons.mic),
             tooltip: '음원 업로드',
           ),
           // Upload image button
           IconButton(
-            onPressed: () => Get.find<ChatController>().uploadImage(),
+            onPressed: () => Get.find<ChatViewModel>().uploadImage(),
             icon: const Icon(Icons.image),
             tooltip: '사진 업로드',
           ),
@@ -72,9 +72,9 @@ class UploadButtons extends StatelessWidget {
           ),
           const Text('영어로 번역'),
           Switch(
-            value: Get.find<ChatController>().isTranslateToggled.value,
+            value: Get.find<ChatViewModel>().isTranslateToggled,
             onChanged: (value) {
-              Get.find<ChatController>().toggleTranslate();
+              Get.find<ChatViewModel>().toggleTranslate();
             },
           ),
         ],
@@ -94,17 +94,17 @@ class MessageButtons extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         IconButton(
-          onPressed: () => Get.find<ChatController>().clearChat(),
+          onPressed: () => Get.find<ChatViewModel>().clearChat(),
           icon: const Icon(Icons.clear_all),
           tooltip: '채팅 초기화',
         ),
         IconButton(
-          onPressed: () => Get.find<ChatController>().resendMessage(),
+          onPressed: () => Get.find<ChatViewModel>().resendMessage(),
           icon: const Icon(Icons.refresh),
           tooltip: '재전송',
         ),
         IconButton(
-          onPressed: () => Get.find<ChatController>().sendMessage(),
+          onPressed: () => Get.find<ChatViewModel>().sendMessage(),
           icon: const Icon(Icons.send),
           tooltip: '전송',
         ),

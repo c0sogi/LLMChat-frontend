@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:url_strategy/url_strategy.dart';
 import './app/app_bindings.dart';
-import './screens/home_screen.dart';
+import 'view/home_screen.dart';
 
 // class DeviceInfo {
 //   static bool isChromeInIOS() {
@@ -59,6 +59,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      title: "ChatGPT App",
       debugShowCheckedModeBanner: false,
       initialBinding: AppBinding(),
       home: const HomeScreen(),
