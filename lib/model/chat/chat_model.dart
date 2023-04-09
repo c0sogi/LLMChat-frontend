@@ -51,47 +51,38 @@ class ChatModel {
   }
 
   void beginChat(String apiKey) {
-    // check if webSocketModel is initialized
-    _webSocketModel != null
-        ? () {
-            // ensure there's no duplicated channel
-            if (_webSocketModel!.isConnected) {
-              print("closing channel...");
-              _webSocketModel!.close();
-            }
-            // initialize channel
-            _webSocketModel = WebSocketModel(
-              url: "${Config.webSocketUrl}/$apiKey",
-              onMessageCallback: (dynamic raw) {
-                _messageHandler(raw);
-                _onMessageCallback(raw);
-              },
-              onErrCallback: (dynamic err) => print(err),
-              onSuccessConnectCallback: () => addChatMessage(
-                MessageModel(
-                  message: '안녕하세요! 무엇을 도와드릴까요?',
-                  isGptSpeaking: true,
-                  isFinished: true,
-                ),
-              ),
-              onFailConnectCallback: () => addChatMessage(
-                MessageModel(
-                  message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
-                  isGptSpeaking: true,
-                  isFinished: true,
-                ),
-              ),
-            );
-            _webSocketModel!.listen();
-            print("connected to ${Config.webSocketUrl}/$apiKey");
-          }()
-        : addChatMessage(
-            MessageModel(
-              message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
-              isGptSpeaking: true,
-              isFinished: true,
-            ),
-          );
+    print("웹소켓 연결됨?");
+    // ensure there's no duplicated channel
+    if (_webSocketModel?.isConnected ?? false) {
+      print("closing channel...");
+      _webSocketModel!.close();
+    }
+    // initialize channel
+    _webSocketModel = WebSocketModel(
+      url: "${Config.webSocketUrl}/$apiKey",
+      onMessageCallback: (dynamic raw) {
+        _messageHandler(raw);
+        _onMessageCallback(raw);
+      },
+      onErrCallback: (dynamic err) => print(err),
+      onSuccessConnectCallback: () => addChatMessage(
+        MessageModel(
+          message: '안녕하세요! 무엇을 도와드릴까요?',
+          isGptSpeaking: true,
+          isFinished: true,
+        ),
+      ),
+      onFailConnectCallback: () => addChatMessage(
+        MessageModel(
+          message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다!!",
+          isGptSpeaking: true,
+          isFinished: true,
+        ),
+      ),
+    );
+    _webSocketModel!.listen();
+    print("connected to ${Config.webSocketUrl}/$apiKey");
+    print("웹소켓 연결됨");
   }
 
   void endChat() {
@@ -174,7 +165,7 @@ class ChatModel {
             }()
           : addChatMessage(
               MessageModel(
-                message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
+                message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다..",
                 isGptSpeaking: true,
                 isFinished: true,
               ),

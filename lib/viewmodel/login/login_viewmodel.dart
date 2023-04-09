@@ -9,7 +9,7 @@ import '../../app/app_config.dart';
 import '../chat/chat_viewmodel.dart';
 import '../../model/login/login_storage_model.dart';
 
-class LoginController extends GetxController {
+class LoginViewModel extends GetxController {
   // controllers
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
   final AuthService _authService = AuthService();

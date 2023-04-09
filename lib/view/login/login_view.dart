@@ -14,7 +14,7 @@ class LoginDrawer extends StatelessWidget {
     return Drawer(
       child: SingleChildScrollView(
         child: Obx(
-          () => Get.find<LoginController>().jwtToken.value.isEmpty
+          () => Get.find<LoginViewModel>().jwtToken.value.isEmpty
               ? const LoginForm()
               : const ApiKeysList(),
         ),
@@ -35,7 +35,7 @@ class LoginForm extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: FormBuilder(
-            key: Get.find<LoginController>().formKey,
+            key: Get.find<LoginViewModel>().formKey,
             child: Column(
               children: const [
                 EmailForm(),
@@ -57,7 +57,7 @@ class AuthButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LoginController loginController = Get.find<LoginController>();
+    final LoginViewModel loginController = Get.find<LoginViewModel>();
     return Obx(
       () => Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -197,7 +197,7 @@ class ApiKeysList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loginController = Get.find<LoginController>();
+    final loginController = Get.find<LoginViewModel>();
     final chatController = Get.find<ChatViewModel>();
     return Obx(
       () => Column(

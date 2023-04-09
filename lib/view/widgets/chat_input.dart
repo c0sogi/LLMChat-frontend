@@ -50,35 +50,37 @@ class UploadButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Upload audio button
-          IconButton(
-            onPressed: () => Get.find<ChatViewModel>().uploadAudio(),
-            icon: const Icon(Icons.mic),
-            tooltip: '음원 업로드',
-          ),
-          // Upload image button
-          IconButton(
-            onPressed: () => Get.find<ChatViewModel>().uploadImage(),
-            icon: const Icon(Icons.image),
-            tooltip: '사진 업로드',
-          ),
-          // Expanded box
-          Expanded(
-            child: Container(),
-          ),
-          const Text('영어로 번역'),
-          Switch(
-            value: Get.find<ChatViewModel>().isTranslateToggled,
-            onChanged: (value) {
-              Get.find<ChatViewModel>().toggleTranslate();
-            },
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        // Upload audio button
+        IconButton(
+          onPressed: () => Get.find<ChatViewModel>().uploadAudio(),
+          icon: const Icon(Icons.mic),
+          tooltip: '음원 업로드',
+        ),
+        // Upload image button
+        IconButton(
+          onPressed: () => Get.find<ChatViewModel>().uploadImage(),
+          icon: const Icon(Icons.image),
+          tooltip: '사진 업로드',
+        ),
+        // Expanded box
+        Expanded(
+          child: Container(),
+        ),
+        const Text('영어로 번역'),
+        Obx(
+          () => Get.find<ChatViewModel>().isChatModelInitialized.value
+              ? Switch(
+                  value: Get.find<ChatViewModel>().isTranslateToggled,
+                  onChanged: (value) {
+                    Get.find<ChatViewModel>().toggleTranslate();
+                  },
+                )
+              : Container(),
+        ),
+      ],
     );
   }
 }

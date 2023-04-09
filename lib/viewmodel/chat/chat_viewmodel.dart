@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web/viewmodel/chat/scroll_viewmodel.dart';
 import 'package:get/get.dart';
 
-import '../../app/app_config.dart';
 import '../../model/chat/chat_model.dart';
 
 class ChatViewModel extends GetxController {
@@ -10,10 +9,12 @@ class ChatViewModel extends GetxController {
   final TextEditingController messageController = TextEditingController();
   final FocusNode messageFocusNode = FocusNode();
   Rx<ChatModel>? _chatModel;
+  RxBool isChatModelInitialized = false.obs;
 
   bool get isTranslateToggled => _chatModel?.value.isTranslateToggled ?? false;
   int get length => _chatModel?.value.messages.length ?? 0;
   List get messages => _chatModel?.value.messages ?? [];
+  // RxBool get isChatModelInitialized => _chatModel != null;
 
   @override
   void onClose() {
@@ -25,15 +26,17 @@ class ChatViewModel extends GetxController {
 
   void beginChat({required String apiKey, required int chatRoomId}) {
     // check channel is late initialized or not
+    print("beginChat() called");
     _chatModel = ChatModel(
-        chatRoomId: chatRoomId,
-        onMessageCallback: (dynamic raw) =>
-            Get.find<ScrollViewModel>().scrollToBottom(animated: false)).obs;
+      chatRoomId: chatRoomId,
+      onMessageCallback: (dynamic raw) =>
+          Get.find<ScrollViewModel>().scrollToBottom(animated: false),
+    ).obs;
+    isChatModelInitialized(true);
     _chatModel!.update(
       (val) => val!.beginChat(apiKey),
     );
     Get.find<ScrollViewModel>().scrollToBottom(animated: false);
-    print("connected to ${Config.webSocketUrl}/$apiKey");
   }
 
   void endChat() {

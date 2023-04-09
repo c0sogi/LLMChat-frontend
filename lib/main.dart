@@ -59,13 +59,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: "ChatGPT App",
-      debugShowCheckedModeBanner: false,
-      initialBinding: AppBinding(),
-      home: const HomeScreen(),
-      routes: {
-        '/home': (context) => const HomeScreen(),
-      }
-    );
+        title: "ChatGPT App",
+        debugShowCheckedModeBanner: false,
+        initialBinding: AppBinding(),
+        home: const HomeScreen(),
+        routes: {
+          '/home': (context) => const HomeScreen(),
+        });
   }
 }

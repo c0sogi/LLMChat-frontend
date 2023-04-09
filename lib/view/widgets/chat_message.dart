@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../../model/message/message_model.dart';
 
 class ChatMessage extends StatelessWidget {
-  final Rx<MessageModel> message;
+  final MessageModel message;
   const ChatMessage({
     super.key,
     required this.message,
@@ -13,74 +13,68 @@ class ChatMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final messageParts = message.message.split('```');
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      Get.find<ScrollViewModel>().scrollToBottom(animated: false);
+    });
     return Container(
-      alignment: message.value.isGptSpeaking
-          ? Alignment.centerLeft
-          : Alignment.centerRight,
+      alignment:
+          message.isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
-        crossAxisAlignment: message.value.isGptSpeaking
+        crossAxisAlignment: message.isGptSpeaking
             ? CrossAxisAlignment.start
             : CrossAxisAlignment.end,
         children: [
-          Obx(
-            () {
-              final messageParts = message.value.message.split('```');
-              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                Get.find<ScrollViewModel>().scrollToBottom(animated: false);
-              });
-              return Container(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.7,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: message.value.isGptSpeaking
-                        ? Colors.grey[300]
-                        : Colors.green[300],
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(12),
-                      topRight: const Radius.circular(12),
-                      bottomLeft: message.value.isGptSpeaking
-                          ? const Radius.circular(0)
-                          : const Radius.circular(12),
-                      bottomRight: message.value.isGptSpeaking
-                          ? const Radius.circular(12)
-                          : const Radius.circular(0),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: messageParts.asMap().entries.map<Widget>((entry) {
-                      int index = entry.key;
-                      String part = entry.value;
-                      if (index % 2 == 0) {
-                        return Text(
-                          part,
-                          style: TextStyle(
-                            color: message.value.isGptSpeaking
-                                ? Colors.black
-                                : Colors.white,
-                          ),
-                        );
-                      } else {
-                        final languageMatch =
-                            RegExp(r'^(\w+)\n').firstMatch(messageParts[index]);
-                        final code = languageMatch != null
-                            ? messageParts[index].substring(languageMatch.end)
-                            : messageParts[index];
-                        return CodeBlock(
-                          code: code.trim(),
-                          language: languageMatch != null
-                              ? languageMatch.group(1)
-                              : '',
-                        );
-                      }
-                    }).toList(),
-                  ));
-            },
-          ),
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.7,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color:
+                  message.isGptSpeaking ? Colors.grey[300] : Colors.green[300],
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(12),
+                topRight: const Radius.circular(12),
+                bottomLeft: message.isGptSpeaking
+                    ? const Radius.circular(0)
+                    : const Radius.circular(12),
+                bottomRight: message.isGptSpeaking
+                    ? const Radius.circular(12)
+                    : const Radius.circular(0),
+              ),
+            ),
+            child: Column( 
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: messageParts.asMap().entries.map<Widget>(
+                (entry) {
+                  int index = entry.key;
+                  String part = entry.value;
+                  if (index % 2 == 0) {
+                    return Text(
+                      part,
+                      style: TextStyle(
+                        color:
+                            message.isGptSpeaking ? Colors.black : Colors.white,
+                      ),
+                    );
+                  } else {
+                    final languageMatch =
+                        RegExp(r'^(\w+)\n').firstMatch(messageParts[index]);
+                    final code = languageMatch != null
+                        ? messageParts[index].substring(languageMatch.end)
+                        : messageParts[index];
+                    return CodeBlock(
+                      code: code.trim(),
+                      language:
+                          languageMatch != null ? languageMatch.group(1) : '',
+                    );
+                  }
+                },
+              ).toList(),
+            ),
+          )
         ],
       ),
     );

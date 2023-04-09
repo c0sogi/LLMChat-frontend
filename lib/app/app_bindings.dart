@@ -9,7 +9,7 @@ class AppBinding extends Bindings {
   @override
   void dependencies() {
     Get.put<ChatViewModel>(ChatViewModel());
-    Get.put<LoginController>(LoginController());
+    Get.put<LoginViewModel>(LoginViewModel());
     Get.put<ScrollViewModel>(
       ScrollViewModel(
         scrollModel: ScrollModel(
