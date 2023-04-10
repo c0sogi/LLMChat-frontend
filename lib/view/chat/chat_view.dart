@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web/viewmodel/chat/scroll_viewmodel.dart';
+import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
+import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
-import '../../viewmodel/chat/chat_viewmodel.dart';
 import '../widgets/chat_input.dart';
 import '../widgets/chat_message.dart';
 
@@ -10,39 +10,49 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xff1f005a),
-            Color(0xff5b0060),
-            Color(0xff870160),
-            Color(0xffac255e),
-            Color(0xffca485c),
-            Color(0xffe16b5c),
-            Color(0xfff39060),
-            Color(0xffffb56b),
-          ],
+    final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
+    final ThemeViewModel themeViewModel = Get.find<ThemeViewModel>();
+    return Obx(() {
+      return AnimatedContainer(
+        // black gradient background
+        duration: const Duration(milliseconds: 500),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: themeViewModel.begin.value,
+            end: themeViewModel.end.value,
+            stops: themeViewModel.stops.toList(),
+            colors: ThemeViewModel.defaultGradientColors,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: Obx(
-              () => ListView.builder(
-                controller: Get.find<ScrollViewModel>().scrollController,
-                itemCount: Get.find<ChatViewModel>().length,
-                itemBuilder: (context, index) {
-                  return ChatMessage(
-                    message: Get.find<ChatViewModel>().messages[index],
-                  );
-                },
+        child: Column(
+          children: [
+            Expanded(
+              child: Obx(
+                () => chatViewModel.isChatModelInitialized.value
+                    ? ListView.builder(
+                        controller: chatViewModel.scrollController,
+                        itemCount: chatViewModel.messages!.length,
+                        itemBuilder: (context, index) {
+                          return ChatMessage(
+                            message: chatViewModel.messages![index],
+                          );
+                        },
+                      )
+                    : ListView.builder(
+                        controller: chatViewModel.scrollController,
+                        itemCount: chatViewModel.messagePlaceholder.length,
+                        itemBuilder: (context, index) {
+                          return ChatMessage(
+                            message: chatViewModel.messagePlaceholder[index],
+                          );
+                        },
+                      ),
               ),
             ),
-          ),
-          const ChatInput(),
-        ],
-      ),
-    );
+            const ChatInput(),
+          ],
+        ),
+      );
+    });
   }
 }

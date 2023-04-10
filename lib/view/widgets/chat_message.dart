@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_web/viewmodel/chat/scroll_viewmodel.dart';
+import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:get/get.dart';
 import '../../model/message/message_model.dart';
 
@@ -14,8 +14,8 @@ class ChatMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final messageParts = message.message.split('```');
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      Get.find<ScrollViewModel>().scrollToBottom(animated: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<ChatViewModel>().scrollToBottom(animated: false);
     });
     return Container(
       alignment:
@@ -33,7 +33,7 @@ class ChatMessage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color:
-                  message.isGptSpeaking ? Colors.grey[300] : Colors.green[300],
+                  message.isGptSpeaking ? Colors.grey[600] : Colors.green[600],
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(12),
                 topRight: const Radius.circular(12),
@@ -45,7 +45,7 @@ class ChatMessage extends StatelessWidget {
                     : const Radius.circular(0),
               ),
             ),
-            child: Column( 
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: messageParts.asMap().entries.map<Widget>(
                 (entry) {
@@ -54,9 +54,8 @@ class ChatMessage extends StatelessWidget {
                   if (index % 2 == 0) {
                     return Text(
                       part,
-                      style: TextStyle(
-                        color:
-                            message.isGptSpeaking ? Colors.black : Colors.white,
+                      style: const TextStyle(
+                        color: Colors.white,
                       ),
                     );
                   } else {

@@ -3,9 +3,8 @@ import 'package:get/get.dart';
 import '../../model/chat/scroll_model.dart';
 
 class ScrollViewModel extends GetxController {
-  final Rx<ScrollModel> _scrollModel;
-  ScrollViewModel({required ScrollModel scrollModel})
-      : _scrollModel = scrollModel.obs;
+  final Rx<ScrollModel> _scrollModel =
+      ScrollModel(scrollController: ScrollController()).obs;
 
   ScrollController get scrollController => _scrollModel.value.scrollController;
 

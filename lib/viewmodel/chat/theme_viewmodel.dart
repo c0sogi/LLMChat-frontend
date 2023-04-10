@@ -1,0 +1,37 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+class ThemeViewModel extends GetxController {
+  static const defaultGradientColors = <Color>[
+    Color(0xff1f005a),
+    Color(0xff5b0060),
+    Color(0xff870160),
+    Color(0xffac255e),
+    Color(0xffca485c),
+    Color(0xffe16b5c),
+    Color(0xfff39060),
+    Color(0xffffb56b),
+  ];
+  final Rx<Alignment> begin = Alignment.topCenter.obs;
+  final Rx<Alignment> end = Alignment.bottomCenter.obs;
+  final RxList<double> stops =
+      <double>[0.0, 0.0, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0].obs;
+
+  void toggleTheme(bool night) {
+    if (night) {
+      stops.assignAll([0.0, 0.33, 0.66, 0.8, 0.85, 0.9, 0.95, 1.0]);
+    } else {
+      stops.assignAll([0.0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0]);
+    }
+    update();
+  }
+
+  LinearGradient getGradientColors() {
+    return LinearGradient(
+      begin: begin.value,
+      end: end.value,
+      stops: stops,
+      colors: defaultGradientColors,
+    );
+  }
+}

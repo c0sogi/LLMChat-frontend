@@ -14,7 +14,7 @@ class LoginDrawer extends StatelessWidget {
     return Drawer(
       child: SingleChildScrollView(
         child: Obx(
-          () => Get.find<LoginViewModel>().jwtToken.value.isEmpty
+          () => Get.find<LoginViewModel>().jwtToken.isEmpty
               ? const LoginForm()
               : const ApiKeysList(),
         ),
@@ -57,34 +57,31 @@ class AuthButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LoginViewModel loginController = Get.find<LoginViewModel>();
+    final LoginViewModel loginViewModel = Get.find<LoginViewModel>();
     return Obx(
       () => Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            // 로그인 유지 체크박스
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Checkbox(
-                  value: loginController.isRemembered.value,
-                  onChanged: (bool? value) {
-                    if (value != null) {
-                      loginController.isRemembered(value);
-                    }
-                  },
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Checkbox(
+                value: loginViewModel.isRemembered,
+                onChanged: (bool? value) {
+                  if (value != null) {
+                    loginViewModel.isRemembered = value;
+                  }
+                },
+              ),
+              const Text(
+                '로그인 유지',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
-                const Text(
-                  '로그인 유지',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           Row(
             children: [
@@ -99,16 +96,18 @@ class AuthButtons extends StatelessWidget {
                         const SizedBox(height: 10),
                         TextButton(
                           onPressed: () async {
-                            if (loginController.formKey.currentState!
+                            if (loginViewModel.formKey.currentState!
                                 .validate()) {
-                              loginController.isLoading.value = true;
-                              await loginController.register(
-                                loginController.formKey.currentState!
-                                    .fields['email']!.value,
-                                loginController.formKey.currentState!
-                                    .fields['password']!.value,
-                              );
-                              loginController.isLoading.value = false;
+                              loginViewModel.isLoading(true);
+                              await loginViewModel
+                                  .register(
+                                    loginViewModel.formKey.currentState!
+                                        .fields['email']!.value,
+                                    loginViewModel.formKey.currentState!
+                                        .fields['password']!.value,
+                                  )
+                                  .then((value) =>
+                                      loginViewModel.isLoading(false));
                             }
                           },
                           child: const Text('회원가입'),
@@ -120,21 +119,22 @@ class AuthButtons extends StatelessWidget {
               ),
               ElevatedButton(
                 // 로그인 버튼
-                onPressed: loginController.isLoading.value
+                onPressed: loginViewModel.isLoading.value
                     ? null
                     : () async {
-                        if (loginController.formKey.currentState!.validate()) {
-                          loginController.isLoading.value = true;
-                          await loginController.login(
-                            loginController
-                                .formKey.currentState!.fields['email']!.value,
-                            loginController.formKey.currentState!
-                                .fields['password']!.value,
-                          );
-                          loginController.isLoading.value = false;
+                        if (loginViewModel.formKey.currentState!.validate()) {
+                          loginViewModel.isLoading(true);
+                          await loginViewModel
+                              .login(
+                                loginViewModel.formKey.currentState!
+                                    .fields['email']!.value,
+                                loginViewModel.formKey.currentState!
+                                    .fields['password']!.value,
+                              )
+                              .then((_) => loginViewModel.isLoading(false));
                         }
                       },
-                child: loginController.isLoading.value
+                child: loginViewModel.isLoading.value
                     ? const CircularProgressIndicator(
                         color: Colors.white,
                       )
@@ -197,8 +197,7 @@ class ApiKeysList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loginController = Get.find<LoginViewModel>();
-    final chatController = Get.find<ChatViewModel>();
+    final loginViewModel = Get.find<LoginViewModel>();
     return Obx(
       () => Column(
         children: [
@@ -207,7 +206,7 @@ class ApiKeysList extends StatelessWidget {
             elevation: 5,
             child: ListTile(
               title: Text(
-                "${loginController.username}님 안녕하세요!",
+                "${loginViewModel.username}님 안녕하세요!",
                 style: const TextStyle(color: Colors.white),
               ),
               subtitle: const Text(
@@ -215,16 +214,16 @@ class ApiKeysList extends StatelessWidget {
                 style: TextStyle(color: Colors.white70),
               ),
               onTap: () async {
-                await loginController.deleteToken();
-                chatController.endChat();
+                await loginViewModel.deleteToken();
+                Get.find<ChatViewModel>().endChat();
               },
             ),
           ),
           ListView.builder(
             shrinkWrap: true,
-            itemCount: loginController.apiKeys.length,
+            itemCount: loginViewModel.apiKeys.length,
             itemBuilder: (context, index) {
-              final apiKey = loginController.apiKeys[index];
+              final apiKey = loginViewModel.apiKeys[index];
               return Card(
                 child: ListTile(
                   title: Text(apiKey['user_memo']),
@@ -232,7 +231,7 @@ class ApiKeysList extends StatelessWidget {
                     DateFormat('yyyy-MM-dd hh:mm a')
                         .format(DateTime.parse(apiKey['created_at'])),
                   ),
-                  onTap: () => loginController.onClickApiKey(
+                  onTap: () => loginViewModel.onClickApiKey(
                     accessKey: apiKey['access_key'],
                     userMemo: apiKey['user_memo'],
                   ),

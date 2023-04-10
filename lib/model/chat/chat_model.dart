@@ -51,10 +51,8 @@ class ChatModel {
   }
 
   void beginChat(String apiKey) {
-    print("웹소켓 연결됨?");
     // ensure there's no duplicated channel
     if (_webSocketModel?.isConnected ?? false) {
-      print("closing channel...");
       _webSocketModel!.close();
     }
     // initialize channel
@@ -64,7 +62,7 @@ class ChatModel {
         _messageHandler(raw);
         _onMessageCallback(raw);
       },
-      onErrCallback: (dynamic err) => print(err),
+      onErrCallback: (dynamic err) => {},
       onSuccessConnectCallback: () => addChatMessage(
         MessageModel(
           message: '안녕하세요! 무엇을 도와드릴까요?',
@@ -81,8 +79,6 @@ class ChatModel {
       ),
     );
     _webSocketModel!.listen();
-    print("connected to ${Config.webSocketUrl}/$apiKey");
-    print("웹소켓 연결됨");
   }
 
   void endChat() {
@@ -147,38 +143,28 @@ class ChatModel {
   void sendUserMessage({
     required String message,
   }) {
-    if (message.isNotEmpty && !isTalking) {
-      _webSocketModel != null
-          ? () {
-              _webSocketModel!.sendJson({
-                "msg": message,
-                "translate": isTranslateToggled,
-                "chat_room_id": _chatRoomId
-              });
-              addChatMessage(
-                MessageModel(
-                  message: message,
-                  isGptSpeaking: false,
-                  isFinished: isTranslateToggled ? false : true,
-                ),
-              );
-            }()
-          : addChatMessage(
-              MessageModel(
-                message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다..",
-                isGptSpeaking: true,
-                isFinished: true,
-              ),
-            );
+    if (message.isNotEmpty && !isTalking && _webSocketModel != null) {
+      _webSocketModel!.sendJson({
+        "msg": message,
+        "translate": isTranslateToggled,
+        "chat_room_id": _chatRoomId
+      });
+      addChatMessage(
+        MessageModel(
+          message: message,
+          isGptSpeaking: false,
+          isFinished: isTranslateToggled ? false : true,
+        ),
+      );
     }
   }
 
   void resendUserMessage() {
     // Implement resend message logic
-    if (!isTalking) {
+    if (!isTalking && _webSocketModel != null) {
       final String? lastUserMessage =
           lastChatMessageWhere((mm) => mm.isGptSpeaking == false)?.message;
-      if (_webSocketModel != null && lastUserMessage != null) {
+      if (lastUserMessage != null) {
         _webSocketModel!.sendJson({
           "msg": "/retry",
           "translate": false,
@@ -190,35 +176,18 @@ class ChatModel {
           "chat_room_id": _chatRoomId,
         });
       }
-      if (_webSocketModel == null) {
-        addChatMessage(
-          MessageModel(
-            message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
-            isGptSpeaking: true,
-            isFinished: true,
-          ),
-        );
-      }
     }
   }
 
   void clearAllChat() {
     // Implement clear chat logic
-    if (!isTalking) {
+    if (!isTalking && _webSocketModel != null) {
       _messages.clear();
-      _webSocketModel != null
-          ? _webSocketModel!.sendJson({
-              "msg": "/clear",
-              "translate": false,
-              "chat_room_id": _chatRoomId,
-            })
-          : addChatMessage(
-              MessageModel(
-                message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
-                isGptSpeaking: true,
-                isFinished: true,
-              ),
-            );
+      _webSocketModel!.sendJson({
+        "msg": "/clear",
+        "translate": false,
+        "chat_room_id": _chatRoomId,
+      });
     }
   }
 

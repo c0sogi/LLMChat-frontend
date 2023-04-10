@@ -46,7 +46,7 @@ class WebSocketModel {
   }
 
   void reconnect({required String url}) {
-    if(isConnected){
+    if (isConnected) {
       close();
     }
     _channel = HtmlWebSocketChannel.connect(url);

@@ -25,13 +25,15 @@ class ChatInput extends StatelessWidget {
                   ),
                   onSubmitted: (text) {
                     // assure that the focus on the textfield is not removed
-                    FocusScope.of(context).requestFocus(
-                      Get.find<ChatViewModel>().messageFocusNode,
-                    );
+                    GetPlatform.isMobile
+                        ? FocusScope.of(context).unfocus()
+                        : FocusScope.of(context).requestFocus(
+                            Get.find<ChatViewModel>().messageFocusNode,
+                          );
                     Get.find<ChatViewModel>().sendMessage();
                   },
                 ),
-                const UploadButtons(),
+                const BottomToolbar(),
               ],
             ),
           ),
@@ -43,8 +45,8 @@ class ChatInput extends StatelessWidget {
   }
 }
 
-class UploadButtons extends StatelessWidget {
-  const UploadButtons({
+class BottomToolbar extends StatelessWidget {
+  const BottomToolbar({
     super.key,
   });
 
@@ -74,9 +76,8 @@ class UploadButtons extends StatelessWidget {
           () => Get.find<ChatViewModel>().isChatModelInitialized.value
               ? Switch(
                   value: Get.find<ChatViewModel>().isTranslateToggled,
-                  onChanged: (value) {
-                    Get.find<ChatViewModel>().toggleTranslate();
-                  },
+                  onChanged: (value) =>
+                      Get.find<ChatViewModel>().toggleTranslate(),
                 )
               : Container(),
         ),
