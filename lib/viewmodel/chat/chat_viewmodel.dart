@@ -98,8 +98,9 @@ class ChatViewModel extends GetxController {
 
   void sendMessage() {
     _chatModel?.update((val) {
-      val!.sendUserMessage(message: messageController.text);
-      messageController.clear();
+      if (val!.sendUserMessage(message: messageController.text)) {
+        messageController.clear();
+      }
     });
   }
 

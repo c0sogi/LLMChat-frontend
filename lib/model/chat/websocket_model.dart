@@ -46,13 +46,19 @@ class WebSocketModel {
   }
 
   void reconnect({required String url}) {
-    if (isConnected) {
+    if (_isConnected) {
       close();
     }
-    _channel = HtmlWebSocketChannel.connect(url);
+    while (!_isConnected) {
+      try {
+        _channel = HtmlWebSocketChannel.connect(url);
+        listen();
+      } catch (e) {
+        _isConnected = false;
+      }
+    }
     _isConnected = true;
     this.url = url;
-    listen();
   }
 
   void close() {

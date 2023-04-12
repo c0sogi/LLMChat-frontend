@@ -87,6 +87,7 @@ class ChatModel {
   void endChat() {
     if (_webSocketModel != null) {
       _webSocketModel!.close();
+      _webSocketModel = null;
       _messages.add(
         MessageModel(
           message: '채팅이 종료되었습니다.',
@@ -158,7 +159,7 @@ class ChatModel {
     isTranslateToggled = !isTranslateToggled;
   }
 
-  void sendUserMessage({
+  bool sendUserMessage({
     required String message,
   }) {
     if (message.isNotEmpty && !isQuerying && _webSocketModel != null) {
@@ -183,7 +184,9 @@ class ChatModel {
         ),
       );
       isQuerying = true;
+      return true;
     }
+    return false;
   }
 
   void resendUserMessage() {

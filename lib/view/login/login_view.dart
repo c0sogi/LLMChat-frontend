@@ -133,11 +133,13 @@ class AuthButtons extends StatelessWidget {
                               .then((_) => loginViewModel.isLoading(false));
                         }
                       },
-                child: loginViewModel.isLoading.value
-                    ? const LinearProgressIndicator(
-                        color: Colors.white,
-                      )
-                    : const Text('로그인'),
+                child: SizedBox(
+                  child: loginViewModel.isLoading.value
+                      ? const RefreshProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text('로그인'),
+                ),
               ),
             ],
           ),
