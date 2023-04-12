@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web/view/login/login_view.dart';
+import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
+import 'package:flutter_web/viewmodel/login/login_viewmodel.dart';
+import 'package:get/get.dart';
 
 class ConversationList extends StatelessWidget {
   const ConversationList({super.key});
@@ -7,18 +10,10 @@ class ConversationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Replace this with the actual list of conversations received via WebSocket
-    List<String> conversations = [
-      'Sample Text1',
-      'Sample Text2',
-      'Sample Text3',
-      'Sample Text4',
-      'Sample Text5',
-      'Sample Text6',
-      'Sample Text7',
-      'Sample Text8',
-      'Sample Text9',
-      'Sample Text10',
-    ];
+    List<String> conversations =
+        List.generate(10, (index) => '채팅방${index + 1}');
+    final LoginViewModel loginViewModel = Get.find<LoginViewModel>();
+
     return Column(
       children: [
         const Flexible(flex: 1, child: LoginDrawer()),
@@ -31,6 +26,21 @@ class ConversationList extends StatelessWidget {
                 title: Text(conversations[index]),
                 onTap: () {
                   // Handle conversation selection here
+                  if (loginViewModel.selectedApiKey.isEmpty) {
+                    Get.snackbar(
+                      'Error',
+                      'API Key를 선택해주세요.',
+                      backgroundColor: Colors.red,
+                      snackPosition: SnackPosition.BOTTOM,
+                      duration: const Duration(seconds: 1),
+                    );
+                    return;
+                  }
+                  loginViewModel.scaffoldKey.currentState!.closeDrawer();
+                  Get.find<ChatViewModel>().beginChat(
+                    apiKey: loginViewModel.selectedApiKey,
+                    chatRoomId: index + 1,
+                  );
                 },
               );
             },

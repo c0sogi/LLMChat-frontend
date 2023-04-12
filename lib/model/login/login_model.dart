@@ -172,6 +172,11 @@ class LoginModel {
     }
   }
 
+  Future<void> logout() async {
+    await deleteToken();
+    _selectedApiKey = "";
+  }
+
   Future<void> deleteToken() async {
     _jwtToken = "";
     _apiKeys.clear();

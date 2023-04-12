@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
-import '../widgets/chat_input.dart';
-import '../widgets/chat_message.dart';
+import 'chat_input.dart';
+import 'chat_message.dart';
 
-class ChatScreen extends StatelessWidget {
-  const ChatScreen({super.key});
+class ChatView extends StatelessWidget {
+  const ChatView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +31,31 @@ class ChatScreen extends StatelessWidget {
                 () => chatViewModel.isChatModelInitialized.value
                     ? ListView.builder(
                         controller: chatViewModel.scrollController,
-                        itemCount: chatViewModel.messages!.length,
+                        itemCount: chatViewModel.length,
                         itemBuilder: (context, index) {
-                          return ChatMessage(
-                            message: chatViewModel.messages![index],
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment:
+                                chatViewModel.messages![index].isGptSpeaking
+                                    ? MainAxisAlignment.start
+                                    : MainAxisAlignment.end,
+                            children: [
+                              !chatViewModel.messages![index].isGptSpeaking
+                                  ? const SizedBox(width: 10)
+                                  : const Padding(
+                                      padding:
+                                          EdgeInsets.only(left: 10, top: 10),
+                                      child: CircleAvatar(
+                                        radius: 20,
+                                        backgroundImage: AssetImage(
+                                          'assets/images/gpt_profile.png',
+                                        ),
+                                      ),
+                                    ),
+                              ChatMessage(
+                                index: index,
+                              ),
+                            ],
                           );
                         },
                       )
@@ -42,8 +63,11 @@ class ChatScreen extends StatelessWidget {
                         controller: chatViewModel.scrollController,
                         itemCount: chatViewModel.messagePlaceholder.length,
                         itemBuilder: (context, index) {
-                          return ChatMessage(
-                            message: chatViewModel.messagePlaceholder[index],
+                          return ChatMessagePlaceholder(
+                            message: chatViewModel
+                                .messagePlaceholder[index].message.value,
+                            isGptSpeaking: chatViewModel
+                                .messagePlaceholder[index].isGptSpeaking,
                           );
                         },
                       ),

@@ -3,7 +3,6 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../viewmodel/chat/chat_viewmodel.dart';
 import '../../viewmodel/login/login_viewmodel.dart';
 
 class LoginDrawer extends StatelessWidget {
@@ -135,7 +134,7 @@ class AuthButtons extends StatelessWidget {
                         }
                       },
                 child: loginViewModel.isLoading.value
-                    ? const CircularProgressIndicator(
+                    ? const LinearProgressIndicator(
                         color: Colors.white,
                       )
                     : const Text('로그인'),
@@ -213,10 +212,7 @@ class ApiKeysList extends StatelessWidget {
                 "여기를 눌러 로그아웃 하세요.",
                 style: TextStyle(color: Colors.white70),
               ),
-              onTap: () async {
-                await loginViewModel.deleteToken();
-                Get.find<ChatViewModel>().endChat();
-              },
+              onTap: loginViewModel.logout,
             ),
           ),
           ListView.builder(

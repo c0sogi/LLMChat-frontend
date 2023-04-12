@@ -14,6 +14,7 @@ class LoginViewModel extends GetxController {
   List get apiKeys => _loginModel.value.apiKeys;
   GlobalKey<FormBuilderState> get formKey => _loginModel.value.formKey;
   String get username => _loginModel.value.username;
+  String get selectedApiKey => _loginModel.value.selectedApiKey;
   bool get isRemembered => _loginModel.value.isRemembered;
   set isRemembered(bool value) => _loginModel.update((val) {
         val!.isRemembered = value;
@@ -59,6 +60,12 @@ class LoginViewModel extends GetxController {
         backgroundColor: snackbar.backgroundColor,
       );
     });
+  }
+
+  Future<void> logout() async {
+    await _loginModel.value.logout();
+    _loginModel.update((_) {});
+    Get.find<ChatViewModel>().endChat();
   }
 
   Future<void> deleteToken() async {

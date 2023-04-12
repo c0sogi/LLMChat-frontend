@@ -1,11 +1,16 @@
+import 'package:get/get.dart';
+
 class MessageModel {
-  String message;
+  RxString message;
   bool isFinished;
   bool isGptSpeaking;
+  RxBool isLoading;
 
   MessageModel({
-    required this.message,
+    required String message,
     required this.isFinished,
     required this.isGptSpeaking,
-  });
+    bool isLoading = false,
+  })  : message = message.obs,
+        isLoading = isLoading.obs;
 }

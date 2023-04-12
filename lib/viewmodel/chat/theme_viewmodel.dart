@@ -15,23 +15,14 @@ class ThemeViewModel extends GetxController {
   final Rx<Alignment> begin = Alignment.topCenter.obs;
   final Rx<Alignment> end = Alignment.bottomCenter.obs;
   final RxList<double> stops =
-      <double>[0.0, 0.0, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0].obs;
+      <double>[0.0, 0.05, 0.1, 0.3, 0.4, 0.6, 0.8, 1.0].obs;
 
   void toggleTheme(bool night) {
     if (night) {
-      stops.assignAll([0.0, 0.33, 0.66, 0.8, 0.85, 0.9, 0.95, 1.0]);
+      stops.assignAll([0.0, 0.33, 0.66, 0.8, 0.95, 0.98, 0.99, 1.0]);
     } else {
-      stops.assignAll([0.0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0]);
+      stops.assignAll([0.0, 0.05, 0.1, 0.3, 0.4, 0.6, 0.8, 1.0]);
     }
     update();
-  }
-
-  LinearGradient getGradientColors() {
-    return LinearGradient(
-      begin: begin.value,
-      end: end.value,
-      stops: stops,
-      colors: defaultGradientColors,
-    );
   }
 }

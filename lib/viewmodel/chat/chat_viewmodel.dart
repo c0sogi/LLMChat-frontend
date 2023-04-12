@@ -8,24 +8,25 @@ import '../../model/message/message_model.dart';
 
 class ChatViewModel extends GetxController {
   // models
+  late Rx<ChatModel>? _chatModel;
   final TextEditingController messageController = TextEditingController();
   final FocusNode messageFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
-  Rx<ChatModel>? _chatModel;
-  RxBool isChatModelInitialized = false.obs;
-  RxList<MessageModel> messagePlaceholder = <MessageModel>[
+  final RxBool isChatModelInitialized = false.obs;
+  final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
       message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
       isFinished: true,
       isGptSpeaking: true,
     )
-  ].obs;
+  ];
   bool _autoScroll = true;
 
+  bool get isTalking => _chatModel?.value.isTalking ?? false;
   ScrollController get scrollController => _scrollController;
   bool get isTranslateToggled => _chatModel?.value.isTranslateToggled ?? false;
   int? get length => _chatModel?.value.messages.length;
-  List? get messages => _chatModel?.value.messages;
+  List<MessageModel>? get messages => _chatModel?.value.messages;
   @override
   void onInit() {
     super.onInit();
@@ -50,16 +51,23 @@ class ChatViewModel extends GetxController {
     _chatModel?.close();
   }
 
-  void scrollToBottom({required bool animated}) {
+  void scrollToBottomCallback(Duration duration) {
     if (scrollController.hasClients &&
         _autoScroll &&
         scrollController.position.hasContentDimensions) {
-      animated
-          ? scrollController.animateTo(
-              scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.easeInOut)
-          : scrollController.jumpTo(scrollController.position.maxScrollExtent);
+      scrollController.jumpTo(scrollController.position.maxScrollExtent);
+    }
+  }
+
+  Future<void> scrollToBottomAnimated() async {
+    if (scrollController.hasClients &&
+        _autoScroll &&
+        scrollController.position.hasContentDimensions) {
+      await scrollController.animateTo(
+        scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -72,7 +80,9 @@ class ChatViewModel extends GetxController {
     _chatModel = ChatModel(
       chatRoomId: chatRoomId,
       onMessageCallback: (dynamic raw) {
-        _chatModel?.update((val) {});
+        if (!isTalking) {
+          _chatModel?.update((val) {});
+        }
       },
     ).obs;
     _chatModel!.update(
