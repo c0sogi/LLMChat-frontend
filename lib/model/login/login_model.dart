@@ -51,12 +51,16 @@ class LoginModel {
     _selectedApiKey = accessKey;
   }
 
-  Future<List<String?>> onGetToken(String token) async {
+  Future<String?> onGetToken(String token) async {
     _jwtToken = token;
     if (isRemembered) {
-      await _authService.saveToken(_jwtToken);
+      await _authService.saveToken(token);
     }
-    return [await fetchApiKeys(), await fetchUserInfo()];
+    final List<String?> result =
+        await Future.wait([fetchApiKeys(), fetchUserInfo()]);
+    return result.every((element) => element == null)
+        ? null
+        : result.join("\n");
   }
 
   Future<String?> fetchApiKeys() async {
@@ -68,21 +72,17 @@ class LoginModel {
         'Authorization': _jwtToken,
       },
     );
-
-    response.statusCode == 200
-        ? _apiKeys.assignAll(jsonDecode(response.body))
-        : () {
-            if (jsonDecode(response.body)["detail"] == "Token Expired") {
-              return "토큰이 만료되었습니다. 다시 로그인해주세요.";
-            } else {
-              return "API 키를 불러오는데 실패하였습니다.";
-            }
-          }();
-    return null;
-    // ? Get.snackbar("Error", "토큰이 만료되었습니다. 다시 로그인해주세요.",
-    //     backgroundColor: Colors.red)
-    // : Get.snackbar("Error", "API 키를 불러오는데 실패하였습니다.",
-    //     backgroundColor: Colors.red);
+    return getFetchResult<String?>(
+      body: response.body,
+      statusCode: response.statusCode,
+      successCode: 200,
+      messageOnSuccess: null,
+      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
+      messageOnFail: "API 키를 불러오는데 실패하였습니다.",
+      onSuccess: (dynamic body) async {
+        _apiKeys.assignAll(body);
+      },
+    );
   }
 
   Future<String?> fetchUserInfo() async {
@@ -94,16 +94,47 @@ class LoginModel {
         'Authorization': _jwtToken,
       },
     );
-    response.statusCode == 200
-        ? _username = jsonDecode(response.body)['email']
-        : () {
-            if (jsonDecode(response.body)["detail"] == "Token Expired") {
-              return "토큰이 만료되었습니다. 다시 로그인해주세요.";
-            } else {
-              return "API 키를 불러오는데 실패하였습니다.";
-            }
-          }();
-    return null;
+    return getFetchResult<String?>(
+      body: response.body,
+      statusCode: response.statusCode,
+      successCode: 200,
+      messageOnSuccess: null,
+      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
+      messageOnFail: "사용자 정보를 불러오는데 실패하였습니다.",
+      onSuccess: (dynamic body) async {
+        _username = body['email'];
+      },
+    );
+  }
+
+  Future<T> getFetchResult<T>({
+    required String body,
+    required int statusCode,
+    required int successCode,
+    required T messageOnSuccess,
+    required T messageOnFail,
+    required T messageOnTokenExpired,
+    Future<void> Function(dynamic)? onSuccess,
+    Future<void> Function(dynamic)? onFail,
+  }) async {
+    bool isFailCallbackCalled = false;
+    try {
+      final dynamic bodyJson = jsonDecode(body);
+      if (statusCode == successCode) {
+        await onSuccess?.call(bodyJson);
+        return messageOnSuccess;
+      }
+      await onFail?.call(body);
+      isFailCallbackCalled = true;
+      return bodyJson["detail"] == "Token Expired"
+          ? messageOnTokenExpired
+          : messageOnFail;
+    } catch (e) {
+      if (!isFailCallbackCalled) {
+        await onFail?.call(body);
+      }
+      return e is T ? e as T : messageOnFail;
+    }
   }
 
   Future<SnackBarModel> register(String email, String password) async {
@@ -115,28 +146,27 @@ class LoginModel {
       },
       body: jsonEncode({'email': email, 'password': password}),
     );
-    if (response.statusCode == 201) {
-      final List<String?> errorMessages = await onGetToken(
-        jsonDecode(response.body)['Authorization'],
-      );
-      return errorMessages.every((element) => element == null)
-          ? SnackBarModel(
-              title: "Success",
-              message: "회원가입에 성공하였습니다.",
-              backgroundColor: Colors.green,
-            )
-          : SnackBarModel(
-              title: "Error",
-              message: errorMessages.join("\n"),
-              backgroundColor: Colors.red,
-            );
-    } else {
-      return SnackBarModel(
-        title: "Error",
-        message: "회원가입에 실패하였습니다.",
-        backgroundColor: Colors.red,
-      );
-    }
+    final String? fetchResult = await getFetchResult<String?>(
+      body: response.body,
+      statusCode: response.statusCode,
+      successCode: 201,
+      messageOnSuccess: null,
+      messageOnFail: "회원가입에 실패하였습니다.",
+      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
+      onSuccess: (dynamic body) async {
+        final String? errorMessages = await onGetToken(
+          jsonDecode(response.body)['Authorization'],
+        );
+        if (errorMessages != null) {
+          throw errorMessages;
+        }
+      },
+    );
+    return SnackBarModel(
+      title: fetchResult == null ? "Success" : "Error",
+      message: fetchResult ?? "회원가입에 성공하였습니다.",
+      backgroundColor: fetchResult == null ? Colors.green : Colors.red,
+    );
   }
 
   Future<SnackBarModel> login(String email, String password) async {
@@ -148,43 +178,42 @@ class LoginModel {
       },
       body: jsonEncode({'email': email, 'password': password}),
     );
-    if (response.statusCode == 200) {
-      final List<String?> errorMessages = await onGetToken(
-        jsonDecode(response.body)['Authorization'],
-      );
-      return errorMessages.every((element) => element == null)
-          ? SnackBarModel(
-              title: "Success",
-              message: "로그인에 성공하였습니다.",
-              backgroundColor: Colors.green,
-            )
-          : SnackBarModel(
-              title: "Error",
-              message: errorMessages.join("\n"),
-              backgroundColor: Colors.red,
-            );
-    } else {
-      return SnackBarModel(
-        title: "Error",
-        message: "로그인에 실패하였습니다.",
-        backgroundColor: Colors.red,
-      );
-    }
+    final String? fetchResult = await getFetchResult<String?>(
+      body: response.body,
+      statusCode: response.statusCode,
+      successCode: 200,
+      messageOnSuccess: null,
+      messageOnFail: "로그인에 실패하였습니다.",
+      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
+      onSuccess: (dynamic body) async {
+        final String? errorMessages = await onGetToken(
+          jsonDecode(response.body)['Authorization'],
+        );
+        if (errorMessages != null) {
+          throw errorMessages;
+        }
+      },
+    );
+    return SnackBarModel(
+      title: fetchResult == null ? "Success" : "Error",
+      message: fetchResult ?? "로그인에 성공하였습니다.",
+      backgroundColor: fetchResult == null ? Colors.green : Colors.red,
+    );
   }
 
   Future<void> logout() async {
-    await deleteToken();
     _selectedApiKey = "";
+    _apiKeys.clear();
+    await deleteToken();
   }
 
   Future<void> deleteToken() async {
     _jwtToken = "";
-    _apiKeys.clear();
     await _authService.deleteToken();
   }
 
   Future<void> loadJwtTokenFromLocalStorage() async {
     final storedToken = await _authService.getToken();
-    storedToken == null ? _jwtToken = "" : onGetToken(storedToken);
+    storedToken == null ? _jwtToken = "" : await onGetToken(storedToken);
   }
 }

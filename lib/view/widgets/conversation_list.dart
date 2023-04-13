@@ -24,7 +24,7 @@ class ConversationList extends StatelessWidget {
             itemBuilder: (context, index) {
               return ListTile(
                 title: Text(conversations[index]),
-                onTap: () {
+                onTap: () async {
                   // Handle conversation selection here
                   if (loginViewModel.selectedApiKey.isEmpty) {
                     Get.snackbar(
@@ -37,7 +37,7 @@ class ConversationList extends StatelessWidget {
                     return;
                   }
                   loginViewModel.scaffoldKey.currentState!.closeDrawer();
-                  Get.find<ChatViewModel>().beginChat(
+                  await Get.find<ChatViewModel>().beginChat(
                     apiKey: loginViewModel.selectedApiKey,
                     chatRoomId: index + 1,
                   );

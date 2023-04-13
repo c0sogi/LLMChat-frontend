@@ -52,14 +52,14 @@ class LoginViewModel extends GetxController {
   Future<void> login(String email, String password) async {
     final SnackBarModel snackbar =
         await _loginModel.value.login(email, password);
-    _loginModel.update((_) {
-      Get.snackbar(
-        snackbar.title,
-        snackbar.message,
-        duration: snackbar.duration,
-        backgroundColor: snackbar.backgroundColor,
-      );
-    });
+    print('snackbar: ${snackbar.title}, ${snackbar.message}');
+    Get.snackbar(
+      snackbar.title,
+      snackbar.message,
+      duration: snackbar.duration,
+      backgroundColor: snackbar.backgroundColor,
+    );
+    _loginModel.update((_) {});
   }
 
   Future<void> logout() async {
@@ -68,12 +68,8 @@ class LoginViewModel extends GetxController {
     Get.find<ChatViewModel>().endChat();
   }
 
-  Future<void> deleteToken() async {
-    await _loginModel.value.deleteToken();
-    _loginModel.update((_) {});
-  }
-
-  void onClickApiKey({required String accessKey, required String userMemo}) {
+  Future<void> onClickApiKey(
+      {required String accessKey, required String userMemo}) async {
     _loginModel.update((val) {
       val!.onClickApiKey(accessKey: accessKey, userMemo: userMemo);
     });
@@ -84,7 +80,7 @@ class LoginViewModel extends GetxController {
       '$userMemo가 선택되었습니다.',
       duration: const Duration(seconds: 1),
     );
-    Get.find<ChatViewModel>().beginChat(
+    await Get.find<ChatViewModel>().beginChat(
       apiKey: accessKey,
       chatRoomId: 0,
     );

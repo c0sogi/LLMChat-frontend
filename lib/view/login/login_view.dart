@@ -229,7 +229,7 @@ class ApiKeysList extends StatelessWidget {
                     DateFormat('yyyy-MM-dd hh:mm a')
                         .format(DateTime.parse(apiKey['created_at'])),
                   ),
-                  onTap: () => loginViewModel.onClickApiKey(
+                  onTap: () async => await loginViewModel.onClickApiKey(
                     accessKey: apiKey['access_key'],
                     userMemo: apiKey['user_memo'],
                   ),

@@ -21,36 +21,36 @@ class ChatModel {
   })  : _chatRoomId = chatRoomId,
         _onMessageCallback = onMessageCallback;
 
-  void _messageHandler(dynamic rawText) {
-    final Map<String, dynamic> receivedChatMessage = jsonDecode(rawText);
-    final String? msg = receivedChatMessage["msg"];
-    final bool? finish = receivedChatMessage["finish"];
-    final bool? isUser = receivedChatMessage["isUser"];
-    final int? chatRoomId = receivedChatMessage["chatRoomId"];
-
-    if (msg != null) {
+  void messageHandler(dynamic rawText) {
+    final Map<String, dynamic> rcvd = jsonDecode(rawText);
+    // if (rcvd["chatRoomId"] != _chatRoomId) {
+    //   return; // ignore messages from other chat rooms
+    // }
+    // print(rcvd);
+    if (rcvd["msg"] != null) {
       // 메시지가 포함된 경우
-      isTalking
-          ? appendToLastChatMessageWhere((mm) => mm.isFinished == false, msg)
-          : () {
-              setLastLoadingMessage(
-                message: msg,
-                isGptSpeaking: isUser ?? false ? false : true,
-                isFinished: finish ?? false,
-              );
-              isTalking = true;
-            }();
+      if (isTalking) {
+        // 이미 말하고 있는 경우 (이어서 말하기)
+        appendToLastChatMessageWhere(
+            (mm) => mm.isFinished == false, rcvd["msg"]);
+      } else {
+        // 말하고 있지 않은 경우 (새로운 대화)
+        isTalking = true;
+        setLastLoadingMessage(
+            message: rcvd["msg"],
+            isFinished: rcvd["finish"],
+            isGptSpeaking: rcvd["is_user"] ?? false ? false : true);
+      }
     }
-
-    if (finish == true) {
-      // GPT가 말을 끝낸 경우
+    if (rcvd["finish"] == true) {
+      // 대화가 끝난 경우
       lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
       isTalking = false;
       isQuerying = false;
     }
   }
 
-  void beginChat(String apiKey) {
+  Future<void> beginChat(String apiKey) async {
     // ensure there's no duplicated channel
     if (_webSocketModel?.isConnected ?? false) {
       _webSocketModel!.close();
@@ -59,7 +59,7 @@ class ChatModel {
     _webSocketModel = WebSocketModel(
       url: "${Config.webSocketUrl}/$apiKey",
       onMessageCallback: (dynamic raw) {
-        _messageHandler(raw);
+        messageHandler(raw);
         _onMessageCallback(raw);
       },
       onErrCallback: (dynamic err) => {
@@ -81,7 +81,7 @@ class ChatModel {
         ),
       ),
     );
-    _webSocketModel!.listen();
+    await _webSocketModel!.listen();
   }
 
   void endChat() {

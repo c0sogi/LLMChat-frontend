@@ -8,7 +8,7 @@ import '../../model/message/message_model.dart';
 
 class ChatViewModel extends GetxController {
   // models
-  late Rx<ChatModel>? _chatModel;
+  Rx<ChatModel>? _chatModel;
   final TextEditingController messageController = TextEditingController();
   final FocusNode messageFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
@@ -71,7 +71,8 @@ class ChatViewModel extends GetxController {
     }
   }
 
-  void beginChat({required String apiKey, required int chatRoomId}) {
+  Future<void> beginChat(
+      {required String apiKey, required int chatRoomId}) async {
     Get.find<ThemeViewModel>().toggleTheme(true);
     // check channel is late initialized or not
     if (isChatModelInitialized.value) {
@@ -85,9 +86,8 @@ class ChatViewModel extends GetxController {
         }
       },
     ).obs;
-    _chatModel!.update(
-      (val) => val!.beginChat(apiKey),
-    );
+    await _chatModel!.value.beginChat(apiKey);
+    _chatModel!.update((_) {});
     isChatModelInitialized(true);
   }
 

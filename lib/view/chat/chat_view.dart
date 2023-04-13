@@ -40,18 +40,30 @@ class ChatView extends StatelessWidget {
                                     ? MainAxisAlignment.start
                                     : MainAxisAlignment.end,
                             children: [
-                              !chatViewModel.messages![index].isGptSpeaking
-                                  ? const SizedBox(width: 10)
-                                  : const Padding(
-                                      padding:
-                                          EdgeInsets.only(left: 10, top: 10),
-                                      child: CircleAvatar(
+                              if (chatViewModel.messages![index].isGptSpeaking)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(left: 10, top: 10),
+                                  child: Stack(
+                                    children: [
+                                      const CircleAvatar(
                                         radius: 20,
                                         backgroundImage: AssetImage(
-                                          'assets/images/gpt_profile.png',
-                                        ),
+                                            'assets/images/gpt_profile.png'),
                                       ),
-                                    ),
+                                      if (chatViewModel
+                                          .messages![index].isLoading.value)
+                                        const Positioned.fill(
+                                          child: CircularProgressIndicator(
+                                            // backgroundColor: Colors.transparent,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.blue),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ChatMessage(
                                 index: index,
                               ),

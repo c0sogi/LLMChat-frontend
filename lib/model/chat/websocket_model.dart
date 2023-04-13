@@ -24,38 +24,40 @@ class WebSocketModel {
     required this.onFailConnectCallback,
   }) : _channel = HtmlWebSocketChannel.connect(url);
 
-  void listen() {
+  Future<void> listen() async {
     try {
       _channel.stream.listen(
         (rcvd) => onMessageCallback(rcvd),
-        onDone: () {
+        onDone: () async {
           _isConnected = false;
+          await reconnect(url: url);
         },
-        onError: (err) {
+        onError: (err) async {
           _isConnected = false;
           onErrCallback(err);
-          reconnect(url: url);
+          await reconnect(url: url);
         },
       );
       _isConnected = true;
     } catch (e) {
-      onFailConnectCallback();
       _isConnected = false;
     }
-    onSuccessConnectCallback();
+    // wait for 1 second and check if websocket is connected
+    _isConnected ? onSuccessConnectCallback() : onFailConnectCallback();
   }
 
-  void reconnect({required String url}) {
+  Future<void> reconnect({required String url}) async {
     if (_isConnected) {
-      close();
+      return;
     }
-    while (!_isConnected) {
-      try {
-        _channel = HtmlWebSocketChannel.connect(url);
-        listen();
-      } catch (e) {
-        _isConnected = false;
-      }
+    await Future.delayed(const Duration(seconds: 5));
+
+    try {
+      _channel = HtmlWebSocketChannel.connect(url);
+      await listen();
+    } catch (e) {
+      _isConnected = false;
+      await reconnect(url: url);
     }
     _isConnected = true;
     this.url = url;
