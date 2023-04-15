@@ -53,7 +53,7 @@ class ChatModel {
   Future<void> beginChat(String apiKey) async {
     // ensure there's no duplicated channel
     if (_webSocketModel?.isConnected ?? false) {
-      _webSocketModel!.close();
+      await _webSocketModel!.close();
     }
     // initialize channel
     _webSocketModel = WebSocketModel(
@@ -84,9 +84,9 @@ class ChatModel {
     await _webSocketModel!.listen();
   }
 
-  void endChat() {
+  Future<void> endChat() async {
     if (_webSocketModel != null) {
-      _webSocketModel!.close();
+      await _webSocketModel!.close();
       _webSocketModel = null;
       _messages.add(
         MessageModel(

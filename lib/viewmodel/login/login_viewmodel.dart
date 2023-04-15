@@ -23,9 +23,17 @@ class LoginViewModel extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    _loginModel.update((val) {
-      val!.init();
-    });
+    final SnackBarModel? snackbar = await _loginModel.value.init();
+    if (snackbar != null) {
+      Get.snackbar(
+        snackbar.title,
+        snackbar.message,
+        duration: snackbar.duration,
+        snackPosition: snackbar.snackPosition,
+        backgroundColor: snackbar.backgroundColor,
+      );
+    }
+    _loginModel.update((_) {});
   }
 
   @override
@@ -45,6 +53,7 @@ class LoginViewModel extends GetxController {
         snackbar.message,
         duration: snackbar.duration,
         backgroundColor: snackbar.backgroundColor,
+        snackPosition: snackbar.snackPosition,
       );
     });
   }
@@ -52,12 +61,12 @@ class LoginViewModel extends GetxController {
   Future<void> login(String email, String password) async {
     final SnackBarModel snackbar =
         await _loginModel.value.login(email, password);
-    print('snackbar: ${snackbar.title}, ${snackbar.message}');
     Get.snackbar(
       snackbar.title,
       snackbar.message,
       duration: snackbar.duration,
       backgroundColor: snackbar.backgroundColor,
+      snackPosition: snackbar.snackPosition,
     );
     _loginModel.update((_) {});
   }
@@ -65,7 +74,7 @@ class LoginViewModel extends GetxController {
   Future<void> logout() async {
     await _loginModel.value.logout();
     _loginModel.update((_) {});
-    Get.find<ChatViewModel>().endChat();
+    await Get.find<ChatViewModel>().endChat();
   }
 
   Future<void> onClickApiKey(

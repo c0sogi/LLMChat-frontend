@@ -27,6 +27,7 @@ class ChatViewModel extends GetxController {
   bool get isTranslateToggled => _chatModel?.value.isTranslateToggled ?? false;
   int? get length => _chatModel?.value.messages.length;
   List<MessageModel>? get messages => _chatModel?.value.messages;
+
   @override
   void onInit() {
     super.onInit();
@@ -71,12 +72,15 @@ class ChatViewModel extends GetxController {
     }
   }
 
-  Future<void> beginChat(
-      {required String apiKey, required int chatRoomId}) async {
+  Future<void> beginChat({
+    required String apiKey,
+    required int chatRoomId,
+  }) async {
     Get.find<ThemeViewModel>().toggleTheme(true);
     // check channel is late initialized or not
     if (isChatModelInitialized.value) {
-      _chatModel?.update((val) => val!.endChat());
+      await _chatModel?.value.endChat();
+      _chatModel?.update((_) => {});
     }
     _chatModel = ChatModel(
       chatRoomId: chatRoomId,
@@ -91,9 +95,10 @@ class ChatViewModel extends GetxController {
     isChatModelInitialized(true);
   }
 
-  void endChat() {
+  Future<void> endChat() async {
     Get.find<ThemeViewModel>().toggleTheme(false);
-    _chatModel?.update((val) => val!.endChat());
+    await _chatModel?.value.endChat();
+    _chatModel?.update((_) {});
   }
 
   void sendMessage() {

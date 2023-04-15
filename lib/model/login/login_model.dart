@@ -7,18 +7,21 @@ import 'package:http/http.dart' as http;
 
 import '../../app/app_config.dart';
 import '../../model/login/login_storage_model.dart';
+import '../../utils/fetch_utils.dart';
 
 class SnackBarModel {
   final String title;
   final String message;
   final Color backgroundColor;
   final Duration duration;
+  final SnackPosition snackPosition;
 
   SnackBarModel({
     required this.title,
     required this.message,
     required this.backgroundColor,
     this.duration = const Duration(seconds: 1),
+    this.snackPosition = SnackPosition.TOP,
   });
 }
 
@@ -38,8 +41,8 @@ class LoginModel {
   String get selectedApiKey => _selectedApiKey;
   String get username => _username;
 
-  void init() async {
-    await loadJwtTokenFromLocalStorage();
+  Future<SnackBarModel?> init() async {
+    return await loadJwtTokenFromLocalStorage();
   }
 
   void close() {
@@ -56,85 +59,32 @@ class LoginModel {
     if (isRemembered) {
       await _authService.saveToken(token);
     }
-    final List<String?> result =
-        await Future.wait([fetchApiKeys(), fetchUserInfo()]);
-    return result.every((element) => element == null)
-        ? null
-        : result.join("\n");
-  }
-
-  Future<String?> fetchApiKeys() async {
-    final response = await http.get(
-      Uri.parse(Config.fetchApiKeysUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': _jwtToken,
-      },
-    );
-    return getFetchResult<String?>(
-      body: response.body,
-      statusCode: response.statusCode,
-      successCode: 200,
-      messageOnSuccess: null,
-      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
-      messageOnFail: "API 키를 불러오는데 실패하였습니다.",
-      onSuccess: (dynamic body) async {
-        _apiKeys.assignAll(body);
-      },
-    );
-  }
-
-  Future<String?> fetchUserInfo() async {
-    final response = await http.get(
-      Uri.parse(Config.fetchUserInfoUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': _jwtToken,
-      },
-    );
-    return getFetchResult<String?>(
-      body: response.body,
-      statusCode: response.statusCode,
-      successCode: 200,
-      messageOnSuccess: null,
-      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
-      messageOnFail: "사용자 정보를 불러오는데 실패하였습니다.",
-      onSuccess: (dynamic body) async {
-        _username = body['email'];
-      },
-    );
-  }
-
-  Future<T> getFetchResult<T>({
-    required String body,
-    required int statusCode,
-    required int successCode,
-    required T messageOnSuccess,
-    required T messageOnFail,
-    required T messageOnTokenExpired,
-    Future<void> Function(dynamic)? onSuccess,
-    Future<void> Function(dynamic)? onFail,
-  }) async {
-    bool isFailCallbackCalled = false;
-    try {
-      final dynamic bodyJson = jsonDecode(body);
-      if (statusCode == successCode) {
-        await onSuccess?.call(bodyJson);
-        return messageOnSuccess;
-      }
-      await onFail?.call(body);
-      isFailCallbackCalled = true;
-      return bodyJson["detail"] == "Token Expired"
-          ? messageOnTokenExpired
-          : messageOnFail;
-    } catch (e) {
-      if (!isFailCallbackCalled) {
-        await onFail?.call(body);
-      }
-      return e is T ? e as T : messageOnFail;
-    }
+    final List<String?> result = await Future.wait([
+      FetchUtils.fetch(
+        authorization: token,
+        url: Config.fetchApiKeysUrl,
+        successCode: 200,
+        messageOnFail: "API 키를 불러오는데 실패하였습니다.",
+        onSuccess: (dynamic body) async {
+          _apiKeys.assignAll(body);
+        },
+      ),
+      FetchUtils.fetch(
+          authorization: token,
+          url: Config.fetchUserInfoUrl,
+          successCode: 200,
+          messageOnFail: "사용자 정보를 불러오는데 실패하였습니다.",
+          onSuccess: (dynamic body) async {
+            _username = body['email'];
+          }),
+    ]);
+    // If all the results are null, return null. Otherwise, return the joined string.
+    // This is because the result of Future.wait is a List of Future<T> and we want to
+    // return a Error Message String (or null for success)
+    // join result without null if there is any null, instead of result.join("\n")
+    final Iterable<String?> errorMessages =
+        result.where((String? element) => element != null);
+    return errorMessages.isEmpty ? null : errorMessages.join("\n");
   }
 
   Future<SnackBarModel> register(String email, String password) async {
@@ -146,7 +96,7 @@ class LoginModel {
       },
       body: jsonEncode({'email': email, 'password': password}),
     );
-    final String? fetchResult = await getFetchResult<String?>(
+    final String? fetchResult = await FetchUtils.getFetchResult<String?>(
       body: response.body,
       statusCode: response.statusCode,
       successCode: 201,
@@ -178,7 +128,7 @@ class LoginModel {
       },
       body: jsonEncode({'email': email, 'password': password}),
     );
-    final String? fetchResult = await getFetchResult<String?>(
+    final String? fetchResult = await FetchUtils.getFetchResult<String?>(
       body: response.body,
       statusCode: response.statusCode,
       successCode: 200,
@@ -212,8 +162,18 @@ class LoginModel {
     await _authService.deleteToken();
   }
 
-  Future<void> loadJwtTokenFromLocalStorage() async {
+  Future<SnackBarModel?> loadJwtTokenFromLocalStorage() async {
     final storedToken = await _authService.getToken();
-    storedToken == null ? _jwtToken = "" : await onGetToken(storedToken);
+    if (storedToken != null) {
+      _jwtToken = storedToken;
+      final String? errorMessages = await onGetToken(storedToken);
+      return SnackBarModel(
+        title: errorMessages == null ? "Success" : "Error",
+        message: errorMessages ?? "자동로그인에 성공하였습니다.",
+        backgroundColor: errorMessages == null ? Colors.green : Colors.red,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+    return null;
   }
 }

@@ -63,8 +63,8 @@ class WebSocketModel {
     this.url = url;
   }
 
-  void close() {
-    _channel.sink.close();
+  Future<void> close() async {
+    await _channel.sink.close();
     _isConnected = false;
   }
 
