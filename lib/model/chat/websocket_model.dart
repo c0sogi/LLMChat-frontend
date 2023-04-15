@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:web_socket_channel/html.dart';
@@ -7,6 +8,7 @@ class WebSocketModel {
   HtmlWebSocketChannel _channel;
   String url;
   bool _isConnected = false;
+  StreamSubscription? _streamSubscription;
   void Function(dynamic) onMessageCallback;
   void Function(dynamic) onErrCallback;
   void Function() onSuccessConnectCallback;
@@ -26,7 +28,7 @@ class WebSocketModel {
 
   Future<void> listen() async {
     try {
-      _channel.stream.listen(
+      _streamSubscription = _channel.stream.listen(
         (rcvd) => onMessageCallback(rcvd),
         onDone: () async {
           _isConnected = false;
@@ -65,6 +67,7 @@ class WebSocketModel {
 
   Future<void> close() async {
     await _channel.sink.close();
+    await _streamSubscription?.cancel();
     _isConnected = false;
   }
 

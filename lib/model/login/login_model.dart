@@ -30,15 +30,19 @@ class LoginModel {
   final AuthService _authService = AuthService();
 
   final List<dynamic> _apiKeys = <dynamic>[];
+  final List<int> _chatrooms = <int>[];
   String _jwtToken = '';
   String _selectedApiKey = '';
+  final int _selectedChatroom = 0;
   bool isRemembered = false;
   String _username = "";
 
   GlobalKey<FormBuilderState> get formKey => _formKey;
   List<dynamic> get apiKeys => _apiKeys;
+  List<int> get chatRooms => _chatrooms;
   String get jwtToken => _jwtToken;
   String get selectedApiKey => _selectedApiKey;
+  int get selectedChatroom => _selectedChatroom;
   String get username => _username;
 
   Future<SnackBarModel?> init() async {
@@ -77,6 +81,14 @@ class LoginModel {
           onSuccess: (dynamic body) async {
             _username = body['email'];
           }),
+      FetchUtils.fetch(
+          authorization: token,
+          url: Config.fetchUserChatrooms,
+          successCode: 200,
+          messageOnFail: "채팅방 정보를 불러오는데 실패하였습니다.",
+          onSuccess: (dynamic body) async {
+            _chatrooms.assignAll(body);
+          }),
     ]);
     // If all the results are null, return null. Otherwise, return the joined string.
     // This is because the result of Future.wait is a List of Future<T> and we want to
@@ -84,7 +96,11 @@ class LoginModel {
     // join result without null if there is any null, instead of result.join("\n")
     final Iterable<String?> errorMessages =
         result.where((String? element) => element != null);
-    return errorMessages.isEmpty ? null : errorMessages.join("\n");
+    if (errorMessages.isEmpty) {
+      return null;
+    } else {
+      return errorMessages.join("\n");
+    }
   }
 
   Future<SnackBarModel> register(String email, String password) async {

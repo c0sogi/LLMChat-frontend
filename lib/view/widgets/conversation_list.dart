@@ -19,32 +19,34 @@ class ConversationList extends StatelessWidget {
         const Flexible(flex: 1, child: LoginDrawer()),
         Flexible(
           flex: 1,
-          child: ListView.builder(
-            itemCount: conversations.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(conversations[index]),
-                onTap: () async {
-                  // Handle conversation selection here
-                  if (loginViewModel.selectedApiKey.isEmpty) {
-                    Get.snackbar(
-                      'Error',
-                      'API Key를 선택해주세요.',
-                      backgroundColor: Colors.red,
-                      snackPosition: SnackPosition.BOTTOM,
-                      duration: const Duration(seconds: 1),
+          child: Obx(() {
+            return ListView.builder(
+              itemCount: loginViewModel.chatRooms.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text("채팅방 ${loginViewModel.chatRooms[index].id}"),
+                  onTap: () async {
+                    // Handle conversation selection here
+                    if (loginViewModel.selectedApiKey.isEmpty) {
+                      Get.snackbar(
+                        'Error',
+                        'API Key를 선택해주세요.',
+                        backgroundColor: Colors.red,
+                        snackPosition: SnackPosition.BOTTOM,
+                        duration: const Duration(seconds: 1),
+                      );
+                      return;
+                    }
+                    loginViewModel.scaffoldKey.currentState!.closeDrawer();
+                    await Get.find<ChatViewModel>().beginChat(
+                      apiKey: loginViewModel.selectedApiKey,
+                      chatRoomId: loginViewModel.chatRooms[index].id,
                     );
-                    return;
-                  }
-                  loginViewModel.scaffoldKey.currentState!.closeDrawer();
-                  await Get.find<ChatViewModel>().beginChat(
-                    apiKey: loginViewModel.selectedApiKey,
-                    chatRoomId: index + 1,
-                  );
-                },
-              );
-            },
-          ),
+                  },
+                );
+              },
+            );
+          }),
         ),
       ],
     );

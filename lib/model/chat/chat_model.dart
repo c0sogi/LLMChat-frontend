@@ -26,7 +26,7 @@ class ChatModel {
     // if (rcvd["chatRoomId"] != _chatRoomId) {
     //   return; // ignore messages from other chat rooms
     // }
-    // print(rcvd);
+    print(rcvd);
     if (rcvd["msg"] != null) {
       // 메시지가 포함된 경우
       if (isTalking) {
@@ -54,6 +54,7 @@ class ChatModel {
     // ensure there's no duplicated channel
     if (_webSocketModel?.isConnected ?? false) {
       await _webSocketModel!.close();
+      _webSocketModel = null;
     }
     // initialize channel
     _webSocketModel = WebSocketModel(

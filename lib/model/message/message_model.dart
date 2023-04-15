@@ -5,14 +5,15 @@ class MessageModel {
   bool isFinished;
   bool isGptSpeaking;
   RxBool isLoading;
-  // final DateTime datetime;
+  final DateTime dateTime;
 
   MessageModel({
     required String message,
     required this.isFinished,
     required this.isGptSpeaking,
-    // required this.datetime,
+    DateTime? datetime,
     bool isLoading = false,
   })  : message = message.obs,
-        isLoading = isLoading.obs;
+        isLoading = isLoading.obs,
+        dateTime = datetime ?? DateTime.now();
 }
