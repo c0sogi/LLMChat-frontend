@@ -12,8 +12,8 @@ class MessageModel {
     required this.isFinished,
     required this.isGptSpeaking,
     DateTime? datetime,
-    bool isLoading = false,
+    bool? isLoading,
   })  : message = message.obs,
-        isLoading = isLoading.obs,
+        isLoading = (isLoading ?? false).obs,
         dateTime = datetime ?? DateTime.now();
 }

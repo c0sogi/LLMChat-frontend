@@ -125,11 +125,9 @@ class ChatViewModel extends GetxController {
     // TODO: Implement upload image logic
     _chatModel?.update(
       (val) => val!.addChatMessage(
-        MessageModel(
-          message: "이미지 업로드 [미지원]",
-          isGptSpeaking: false,
-          isFinished: true,
-        ),
+        message: "이미지 업로드 [미지원]",
+        isGptSpeaking: false,
+        isFinished: true,
       ),
     );
   }
@@ -138,11 +136,9 @@ class ChatViewModel extends GetxController {
     // TODO: Implement upload audio logic
     _chatModel?.update(
       (val) => val!.addChatMessage(
-        MessageModel(
-          message: "음원 업로드 [미지원]",
-          isGptSpeaking: false,
-          isFinished: true,
-        ),
+        message: "음원 업로드 [미지원]",
+        isGptSpeaking: false,
+        isFinished: true,
       ),
     );
   }

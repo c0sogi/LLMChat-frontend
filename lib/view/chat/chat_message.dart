@@ -219,7 +219,7 @@ class CodeBlock extends StatelessWidget {
                         Clipboard.setData(ClipboardData(text: code));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Code copied to clipboard'),
+                            content: Text('코드를 복사했습니다.'),
                           ),
                         );
                       },

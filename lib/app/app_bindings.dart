@@ -9,6 +9,5 @@ class AppBinding extends Bindings {
     Get.put<ThemeViewModel>(ThemeViewModel());
     Get.put<ChatViewModel>(ChatViewModel());
     Get.put<LoginViewModel>(LoginViewModel());
-    // Get.put<ScrollViewModel>(ScrollViewModel());
   }
 }

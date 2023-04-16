@@ -14,6 +14,7 @@ class ChatModel {
 
   int get length => _messages.length;
   List<MessageModel> get messages => _messages;
+  bool get ready => !isQuerying && (_webSocketModel?.isConnected ?? false);
 
   ChatModel({
     required int chatRoomId,
@@ -21,86 +22,139 @@ class ChatModel {
   })  : _chatRoomId = chatRoomId,
         _onMessageCallback = onMessageCallback;
 
-  void messageHandler(dynamic rawText) {
-    final Map<String, dynamic> rcvd = jsonDecode(rawText);
-    // if (rcvd["chatRoomId"] != _chatRoomId) {
-    //   return; // ignore messages from other chat rooms
-    // }
-    print(rcvd);
-    if (rcvd["msg"] != null) {
-      // 메시지가 포함된 경우
-      if (isTalking) {
-        // 이미 말하고 있는 경우 (이어서 말하기)
-        appendToLastChatMessageWhere(
-            (mm) => mm.isFinished == false, rcvd["msg"]);
-      } else {
-        // 말하고 있지 않은 경우 (새로운 대화)
-        isTalking = true;
-        setLastLoadingMessage(
-            message: rcvd["msg"],
-            isFinished: rcvd["finish"],
-            isGptSpeaking: rcvd["is_user"] ?? false ? false : true);
-      }
-    }
-    if (rcvd["finish"] == true) {
-      // 대화가 끝난 경우
-      lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
-      isTalking = false;
-      isQuerying = false;
-    }
-  }
-
   Future<void> beginChat(String apiKey) async {
-    // ensure there's no duplicated channel
-    if (_webSocketModel?.isConnected ?? false) {
-      await _webSocketModel!.close();
-      _webSocketModel = null;
-    }
-    // initialize channel
-    _webSocketModel = WebSocketModel(
-      url: "${Config.webSocketUrl}/$apiKey",
+    print("beginning chat");
+    _webSocketModel ??= WebSocketModel(
       onMessageCallback: (dynamic raw) {
-        messageHandler(raw);
+        _messageHandler(raw);
         _onMessageCallback(raw);
       },
       onErrCallback: (dynamic err) => {
-        isQuerying = false,
-        isTalking = false,
+        _onMessageComplete(),
       },
       onSuccessConnectCallback: () => addChatMessage(
-        MessageModel(
-          message: '안녕하세요! 무엇을 도와드릴까요?',
-          isGptSpeaking: true,
-          isFinished: true,
-        ),
+        message: '서버 연결에 성공했습니다.',
+        isGptSpeaking: true,
+        isFinished: true,
       ),
       onFailConnectCallback: () => addChatMessage(
-        MessageModel(
-          message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다!!",
-          isGptSpeaking: true,
-          isFinished: true,
-        ),
+        message: "서버 연결에 실패했습니다.",
+        isGptSpeaking: true,
+        isFinished: true,
       ),
     );
-    await _webSocketModel!.listen();
+    await _webSocketModel!.connect("${Config.webSocketUrl}/$apiKey");
   }
 
   Future<void> endChat() async {
     if (_webSocketModel != null) {
+      print("ending chat");
       await _webSocketModel!.close();
-      _webSocketModel = null;
-      _messages.add(
-        MessageModel(
-          message: '채팅이 종료되었습니다.',
-          isGptSpeaking: true,
-          isFinished: true,
-        ),
+      addChatMessage(
+        message: '채팅이 종료되었습니다.',
+        isGptSpeaking: true,
+        isFinished: true,
       );
     }
   }
 
-  void addChatMessage(MessageModel message) {
-    _messages.add(message);
+  void toggleTranslate() {
+    isTranslateToggled = !isTranslateToggled;
+  }
+
+  bool sendUserMessage({
+    required String message,
+  }) {
+    if (message.isEmpty || !ready) {
+      return false;
+    }
+
+    _webSocketModel!.sendJson({
+      "msg": message,
+      "translate": isTranslateToggled,
+      "chat_room_id": _chatRoomId
+    });
+    addChatMessage(
+      message: message,
+      isGptSpeaking: false,
+      isFinished: isTranslateToggled ? false : true,
+    );
+    addChatMessage(
+      message: "",
+      isGptSpeaking: true,
+      isFinished: false,
+      isLoading: true,
+    );
+    _startQuerying();
+    return true;
+  }
+
+  void resendUserMessage() {
+    // Implement resend message logic
+    if (!ready) {
+      return;
+    }
+
+    final String? lastUserMessage =
+        lastChatMessageWhere((mm) => mm.isGptSpeaking == false)?.message.value;
+    if (lastUserMessage == null) {
+      return;
+    }
+
+    _webSocketModel!.sendJson({
+      "msg": "/retry",
+      "translate": false,
+      "chat_room_id": _chatRoomId,
+    });
+    _webSocketModel!.sendJson({
+      "msg": lastUserMessage,
+      "translate": isTranslateToggled,
+      "chat_room_id": _chatRoomId,
+    });
+    _startQuerying();
+  }
+
+  void clearAllChat() {
+    if (!ready) {
+      return;
+    }
+
+    _messages.clear();
+    addChatMessage(
+      message: "",
+      isGptSpeaking: true,
+      isFinished: false,
+      isLoading: true,
+    );
+    _webSocketModel!.sendJson({
+      "msg": "/clear",
+      "translate": false,
+      "chat_room_id": _chatRoomId,
+    });
+    _startQuerying();
+  }
+
+  void uploadImage() {
+    // TODO: Implement upload image logic
+  }
+  void uploadAudio() {
+    // TODO: Implement upload audio logic
+  }
+
+  void addChatMessage({
+    required String message,
+    required bool isFinished,
+    required bool isGptSpeaking,
+    bool? isLoading,
+    DateTime? datetime,
+  }) {
+    _messages.add(MessageModel(
+      message: message,
+      isFinished: isFinished,
+      isGptSpeaking: isGptSpeaking,
+      isLoading: isLoading,
+      datetime: datetime,
+    ));
   }
 
   void popChatMessage() {
@@ -128,21 +182,6 @@ class ChatModel {
     }
   }
 
-  void setLastLoadingMessage({
-    required String message,
-    bool isGptSpeaking = true,
-    isFinished = false,
-  }) {
-    final int index =
-        _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
-    if (index != -1) {
-      _messages[index].isGptSpeaking = isGptSpeaking;
-      _messages[index].isFinished = isFinished;
-      _messages[index].message(message);
-      _messages[index].isLoading(false);
-    }
-  }
-
   MessageModel? lastChatMessageWhere(bool Function(MessageModel) test) {
     // get last element where test is true
     try {
@@ -152,90 +191,61 @@ class ChatModel {
     }
   }
 
-  void clearChatMessageExceptLoading() {
-    _messages.removeWhere((mm) => mm.isLoading.value == false);
+  void _messageHandler(dynamic rawText) {
+    final Map<String, dynamic> rcvd = jsonDecode(rawText);
+    final int chatRoomId = rcvd["chatRoomId"] ?? -1;
+    final String message = rcvd["msg"] ?? "";
+    final bool isFinished = rcvd["finish"] ?? false;
+    final bool isGptSpeaking = rcvd["is_user"] ?? false ? false : true;
+    // if (chatRoomId != _chatRoomId) {
+    //   return;
+    // }
+    isTalking
+        ? _onMessageAppend(appendMessage: message)
+        : _onMessageCreate(
+            message: message,
+            isFinished: isFinished,
+            isGptSpeaking: isGptSpeaking,
+          );
+    if (isFinished) {
+      _onMessageComplete();
+    }
   }
 
-  void toggleTranslate() {
-    isTranslateToggled = !isTranslateToggled;
+  void _onMessageAppend({required String appendMessage}) {
+    appendToLastChatMessageWhere((mm) => mm.isFinished == false, appendMessage);
   }
 
-  bool sendUserMessage({
+  void _onMessageCreate({
     required String message,
+    required bool isFinished,
+    required bool isGptSpeaking,
   }) {
-    if (message.isNotEmpty && !isQuerying && _webSocketModel != null) {
-      _webSocketModel!.sendJson({
-        "msg": message,
-        "translate": isTranslateToggled,
-        "chat_room_id": _chatRoomId
-      });
-      addChatMessage(
-        MessageModel(
-          message: message,
-          isGptSpeaking: false,
-          isFinished: isTranslateToggled ? false : true,
-        ),
-      );
-      addChatMessage(
-        MessageModel(
-          message: "",
-          isGptSpeaking: true,
-          isFinished: false,
-          isLoading: true,
-        ),
-      );
-      isQuerying = true;
-      return true;
+    final int index =
+        _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
+    if (index == -1) {
+      return;
     }
-    return false;
+    _messages[index]
+      ..isGptSpeaking = isGptSpeaking
+      ..isFinished = isFinished
+      ..message(message)
+      ..isLoading(false);
+    isTalking = true;
   }
 
-  void resendUserMessage() {
-    // Implement resend message logic
-    if (!isQuerying && _webSocketModel != null) {
-      final String? lastUserMessage =
-          lastChatMessageWhere((mm) => mm.isGptSpeaking == false)
-              ?.message
-              .value;
-      if (lastUserMessage != null) {
-        _webSocketModel!.sendJson({
-          "msg": "/retry",
-          "translate": false,
-          "chat_room_id": _chatRoomId,
-        });
-        _webSocketModel!.sendJson({
-          "msg": lastUserMessage,
-          "translate": isTranslateToggled,
-          "chat_room_id": _chatRoomId,
-        });
-      }
-      isQuerying = true;
+  void _onMessageComplete() {
+    isTalking = false;
+    isQuerying = false;
+    final int index =
+        _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
+    if (index == -1) {
+      return;
     }
+    lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
   }
 
-  void clearAllChat() {
-    // Implement clear chat logic
-    if (!isQuerying && _webSocketModel != null) {
-      _messages.clear();
-      addChatMessage(MessageModel(
-        message: "",
-        isGptSpeaking: true,
-        isFinished: false,
-        isLoading: true,
-      ));
-      _webSocketModel!.sendJson({
-        "msg": "/clear",
-        "translate": false,
-        "chat_room_id": _chatRoomId,
-      });
-      isQuerying = true;
-    }
-  }
-
-  void uploadImage() {
-    // TODO: Implement upload image logic
-  }
-  void uploadAudio() {
-    // TODO: Implement upload audio logic
+  void _startQuerying() {
+    isQuerying = true;
   }
 }
