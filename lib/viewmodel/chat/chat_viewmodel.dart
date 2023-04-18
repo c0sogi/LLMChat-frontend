@@ -83,13 +83,8 @@ class ChatViewModel extends GetxController {
       _chatModel?.update((_) => {});
     }
     _chatModel = ChatModel(
-      chatRoomId: chatRoomId,
-      onMessageCallback: (dynamic raw) {
-        if (!isTalking) {
-          _chatModel?.update((val) {});
-        }
-      },
-    ).obs;
+        chatRoomId: chatRoomId,
+        onMessageCallback: (dynamic raw) => _chatModel?.update((val) {})).obs;
     await _chatModel!.value.beginChat(apiKey);
     _chatModel!.update((_) {});
     isChatModelInitialized(true);

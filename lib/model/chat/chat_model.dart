@@ -77,7 +77,7 @@ class ChatModel {
     addChatMessage(
       message: message,
       isGptSpeaking: false,
-      isFinished: isTranslateToggled ? false : true,
+      isFinished: true,
     );
     addChatMessage(
       message: "",
@@ -200,6 +200,7 @@ class ChatModel {
     // if (chatRoomId != _chatRoomId) {
     //   return;
     // }
+    print("Received: $rcvd");
     isTalking
         ? _onMessageAppend(appendMessage: message)
         : _onMessageCreate(
@@ -213,7 +214,17 @@ class ChatModel {
   }
 
   void _onMessageAppend({required String appendMessage}) {
-    appendToLastChatMessageWhere((mm) => mm.isFinished == false, appendMessage);
+    print("Appending message: $appendMessage");
+    final int index = _messages.lastIndexWhere((mm) => mm.isFinished == false);
+    if (index != -1) {
+      _messages[index].message(_messages[index].message.value + appendMessage);
+      return;
+    }
+    addChatMessage(
+      message: appendMessage,
+      isGptSpeaking: true,
+      isFinished: false,
+    );
   }
 
   void _onMessageCreate({
@@ -221,9 +232,17 @@ class ChatModel {
     required bool isFinished,
     required bool isGptSpeaking,
   }) {
+    print(
+        "Creating message: $message, isFinished: $isFinished, isGptSpeaking: $isGptSpeaking");
     final int index =
         _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
     if (index == -1) {
+      addChatMessage(
+        message: message,
+        isFinished: isFinished,
+        isGptSpeaking: isGptSpeaking,
+      );
+      isTalking = true;
       return;
     }
     _messages[index]
@@ -237,11 +256,6 @@ class ChatModel {
   void _onMessageComplete() {
     isTalking = false;
     isQuerying = false;
-    final int index =
-        _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
-    if (index == -1) {
-      return;
-    }
     lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
   }
 
