@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:web_socket_channel/html.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/html.dart'
+    if (dart.library.html) 'package:web_socket_channel/html.dart';
+import 'package:web_socket_channel/io.dart'
+    if (dart.library.io) 'package:web_socket_channel/io.dart';
 
 class WebSocketModel {
-  WebSocketChannel? _channelIO;
-  HtmlWebSocketChannel? _channelWeb;
+  WebSocketChannel? _channel;
   bool _isConnected = false;
   StreamSubscription? _streamSubscription;
   void Function(dynamic) onMessageCallback;
@@ -15,8 +16,8 @@ class WebSocketModel {
   void Function() onSuccessConnectCallback;
   void Function() onFailConnectCallback;
 
-  WebSocketSink? get sink => kIsWeb ? _channelWeb?.sink : _channelIO?.sink;
-  Stream? get stream => kIsWeb ? _channelWeb?.stream : _channelIO?.stream;
+  WebSocketSink? get sink => _channel?.sink;
+  Stream? get stream => _channel?.stream;
   bool get isConnected => _isConnected;
 
   WebSocketModel({
@@ -30,8 +31,8 @@ class WebSocketModel {
     // ensure there's no duplicated channel
     await close();
     kIsWeb
-        ? _channelWeb = HtmlWebSocketChannel.connect(url)
-        : _channelIO = IOWebSocketChannel.connect(url);
+        ? _channel = HtmlWebSocketChannel.connect(url)
+        : _channel = IOWebSocketChannel.connect(url);
     await _listen(url);
     // print("websocket connected!");
   }
