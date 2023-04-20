@@ -81,14 +81,14 @@ class LoginModel {
           onSuccess: (dynamic body) async {
             _username = body['email'];
           }),
-      FetchUtils.fetch(
-          authorization: token,
-          url: Config.fetchUserChatrooms,
-          successCode: 200,
-          messageOnFail: "채팅방 정보를 불러오는데 실패하였습니다.",
-          onSuccess: (dynamic body) async {
-            _chatrooms.assignAll(body);
-          }),
+      // FetchUtils.fetch(
+      //     authorization: token,
+      //     url: Config.fetchUserChatrooms,
+      //     successCode: 200,
+      //     messageOnFail: "채팅방 정보를 불러오는데 실패하였습니다.",
+      //     onSuccess: (dynamic body) async {
+      //       _chatrooms.assignAll(body);
+      //     }),
     ]);
     // If all the results are null, return null. Otherwise, return the joined string.
     // This is because the result of Future.wait is a List of Future<T> and we want to

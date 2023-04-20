@@ -347,7 +347,7 @@ packages:
     source: hosted
     version: "1.11.0"
   stream_channel:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: stream_channel
       sha256: "83615bee9045c1d322bbbd1ba209b7a749c2cbcdcb3fdd1df8eb488b3279c1c8"

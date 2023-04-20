@@ -191,16 +191,36 @@ class ChatModel {
     }
   }
 
+  DateTime parseFromTimestamp(int timestamp) {
+    final String timecode = timestamp.toString();
+    return DateTime.parse(
+        "${timecode.substring(0, 8)}T${timecode.substring(8)}");
+  }
+
   void _messageHandler(dynamic rawText) {
     final Map<String, dynamic> rcvd = jsonDecode(rawText);
     final int chatRoomId = rcvd["chatRoomId"] ?? -1;
     final String message = rcvd["msg"] ?? "";
     final bool isFinished = rcvd["finish"] ?? false;
     final bool isGptSpeaking = rcvd["is_user"] ?? false ? false : true;
+    final bool init = rcvd["init"] ?? false;
     // if (chatRoomId != _chatRoomId) {
     //   return;
     // }
     print("Received: $rcvd");
+    if (init) {
+      // message is list of messages in format of JSON, so we need to parse it
+      final List<dynamic> messages = jsonDecode(message);
+      for (final Map<String, dynamic> msg in messages) {
+        addChatMessage(
+          message: msg["content"] ?? "",
+          isGptSpeaking: msg["is_user"] ?? false ? false : true,
+          isFinished: true,
+          datetime: parseFromTimestamp(msg["timestamp"]),
+        );
+      }
+      return;
+    }
     isTalking
         ? _onMessageAppend(appendMessage: message)
         : _onMessageCreate(
@@ -214,7 +234,6 @@ class ChatModel {
   }
 
   void _onMessageAppend({required String appendMessage}) {
-    print("Appending message: $appendMessage");
     final int index = _messages.lastIndexWhere((mm) => mm.isFinished == false);
     if (index != -1) {
       _messages[index].message(_messages[index].message.value + appendMessage);
@@ -232,8 +251,6 @@ class ChatModel {
     required bool isFinished,
     required bool isGptSpeaking,
   }) {
-    print(
-        "Creating message: $message, isFinished: $isFinished, isGptSpeaking: $isGptSpeaking");
     final int index =
         _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
     if (index == -1) {

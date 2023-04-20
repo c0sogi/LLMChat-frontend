@@ -23,6 +23,7 @@ dependencies:
   flutter_svg: ^2.0.4
   get: ^4.6.5
   uuid:
+  stream_channel:
 
 dev_dependencies:
   flutter_test:
