@@ -23,7 +23,7 @@ class ChatModel {
         _onMessageCallback = onMessageCallback;
 
   Future<void> beginChat(String apiKey) async {
-    print("beginning chat");
+    // print("beginning chat");
     _webSocketModel ??= WebSocketModel(
       onMessageCallback: (dynamic raw) {
         _messageHandler(raw);
@@ -48,7 +48,7 @@ class ChatModel {
 
   Future<void> endChat() async {
     if (_webSocketModel != null) {
-      print("ending chat");
+      // print("ending chat");
       await _webSocketModel!.close();
       addChatMessage(
         message: '채팅이 종료되었습니다.',
@@ -207,7 +207,7 @@ class ChatModel {
     // if (chatRoomId != _chatRoomId) {
     //   return;
     // }
-    print("Received: $rcvd");
+    // print("Received: $rcvd");
     if (init) {
       // message is list of messages in format of JSON, so we need to parse it
       final List<dynamic> messages = jsonDecode(message);

@@ -33,7 +33,7 @@ class WebSocketModel {
         ? _channelWeb = HtmlWebSocketChannel.connect(url)
         : _channelIO = IOWebSocketChannel.connect(url);
     await _listen(url);
-    print("websocket connected!");
+    // print("websocket connected!");
   }
 
   Future<void> _listen(String url) async {
@@ -62,24 +62,24 @@ class WebSocketModel {
   Future<void> reconnect(
       {required Duration duration, required String url}) async {
     Timer.periodic(duration, (timer) async {
-      print("trying to reconnect...");
+      // print("trying to reconnect...");
       if (_isConnected) {
         timer.cancel();
-        print("reconnected!");
+        // print("reconnected!");
       } else {
         try {
-          print("trying to reconnect...");
+          // print("trying to reconnect...");
           await close();
           await connect(url);
         } catch (e) {
-          print("reconnect failed: $e");
+          // print("reconnect failed: $e");
         }
       }
     });
   }
 
   Future<void> close() async {
-    print("closing websocket...");
+    // print("closing websocket...");
     await sink?.close();
     await _streamSubscription?.cancel();
     _isConnected = false;
