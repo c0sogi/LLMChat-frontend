@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
 
@@ -50,6 +51,19 @@ class ChatViewModel extends GetxController {
     messageController.dispose();
     messageFocusNode.dispose();
     _chatModel?.close();
+  }
+
+  void onKeyTextfield(
+      {required RawKeyEvent event, required BuildContext context}) {
+    if (!event.isKeyPressed(LogicalKeyboardKey.enter) || event.isShiftPressed) {
+      return;
+    }
+    // unfocus textfield when mobile device
+    GetPlatform.isMobile
+        ? FocusScope.of(context).unfocus()
+        : FocusScope.of(context).requestFocus(messageFocusNode);
+    // send message
+    sendMessage();
   }
 
   void scrollToBottomCallback(Duration duration) {

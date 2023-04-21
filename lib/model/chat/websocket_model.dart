@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:web_socket_channel/web_socket_channel.dart';
+
 import 'package:web_socket_channel/html.dart'
     if (dart.library.html) 'package:web_socket_channel/html.dart';
 import 'package:web_socket_channel/io.dart'

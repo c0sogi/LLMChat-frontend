@@ -14,24 +14,24 @@ class ChatInput extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                TextField(
+                RawKeyboardListener(
                   focusNode: Get.find<ChatViewModel>().messageFocusNode,
-                  controller: Get.find<ChatViewModel>().messageController,
-                  decoration: InputDecoration(
-                    hintText: '여기에 메시지를 입력하세요',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  onKey: (event) {
+                    Get.find<ChatViewModel>()
+                        .onKeyTextfield(event: event, context: context);
+                  },
+                  child: TextField(
+                    maxLines: 3,
+                    minLines: 3,
+                    textAlignVertical: TextAlignVertical.center,
+                    controller: Get.find<ChatViewModel>().messageController,
+                    decoration: InputDecoration(
+                      hintText: '여기에 메시지를 입력하세요',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
-                  onSubmitted: (text) {
-                    // assure that the focus on the textfield is not removed
-                    GetPlatform.isMobile
-                        ? FocusScope.of(context).unfocus()
-                        : FocusScope.of(context).requestFocus(
-                            Get.find<ChatViewModel>().messageFocusNode,
-                          );
-                    Get.find<ChatViewModel>().sendMessage();
-                  },
                 ),
                 const BottomToolbar(),
               ],
