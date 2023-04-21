@@ -14,22 +14,17 @@ class ChatInput extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                RawKeyboardListener(
+                TextField(
+                  autofocus: true,
                   focusNode: Get.find<ChatViewModel>().messageFocusNode,
-                  onKey: (event) {
-                    Get.find<ChatViewModel>()
-                        .onKeyTextfield(event: event, context: context);
-                  },
-                  child: TextField(
-                    maxLines: 3,
-                    minLines: 3,
-                    textAlignVertical: TextAlignVertical.center,
-                    controller: Get.find<ChatViewModel>().messageController,
-                    decoration: InputDecoration(
-                      hintText: '여기에 메시지를 입력하세요',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  maxLines: 3,
+                  minLines: 3,
+                  textAlignVertical: TextAlignVertical.center,
+                  controller: Get.find<ChatViewModel>().messageController,
+                  decoration: InputDecoration(
+                    hintText: '여기에 메시지를 입력하세요',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),

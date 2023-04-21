@@ -11,7 +11,17 @@ class ChatViewModel extends GetxController {
   // models
   Rx<ChatModel>? _chatModel;
   final TextEditingController messageController = TextEditingController();
-  final FocusNode messageFocusNode = FocusNode();
+  late final FocusNode messageFocusNode = FocusNode(
+      debugLabel: "messageFocusNode",
+      onKey: (FocusNode node, RawKeyEvent event) {
+        if (event.isShiftPressed || !(event.logicalKey.keyLabel == 'Enter')) {
+          return KeyEventResult.ignored;
+        }
+        if (event is RawKeyDownEvent) {
+          sendMessage();
+        }
+        return KeyEventResult.handled;
+      });
   final ScrollController _scrollController = ScrollController();
   final RxBool isChatModelInitialized = false.obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
@@ -53,15 +63,17 @@ class ChatViewModel extends GetxController {
     _chatModel?.close();
   }
 
-  void onKeyTextfield(
-      {required RawKeyEvent event, required BuildContext context}) {
+  void onKeyFocusNode(
+      {required RawKeyEvent event, required BuildContext? context}) {
     if (!event.isKeyPressed(LogicalKeyboardKey.enter) || event.isShiftPressed) {
       return;
     }
     // unfocus textfield when mobile device
-    GetPlatform.isMobile
-        ? FocusScope.of(context).unfocus()
-        : FocusScope.of(context).requestFocus(messageFocusNode);
+    if (context != null) {
+      GetPlatform.isMobile
+          ? FocusScope.of(context).unfocus()
+          : FocusScope.of(context).requestFocus(messageFocusNode);
+    }
     // send message
     sendMessage();
   }
