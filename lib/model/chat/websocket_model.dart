@@ -11,6 +11,7 @@ import 'package:web_socket_channel/io.dart'
 class WebSocketModel {
   WebSocketChannel? _channel;
   bool _isConnected = false;
+  bool _shouldReconnect = false;
   StreamSubscription? _streamSubscription;
   void Function(dynamic) onMessageCallback;
   void Function(dynamic) onErrCallback;
@@ -31,6 +32,7 @@ class WebSocketModel {
   Future<void> connect(String url) async {
     // ensure there's no duplicated channel
     await close();
+    _shouldReconnect = true;
     kIsWeb
         ? _channel = HtmlWebSocketChannel.connect(url)
         : _channel = IOWebSocketChannel.connect(url);
@@ -47,7 +49,9 @@ class WebSocketModel {
         (rcvd) => onMessageCallback(rcvd),
         onDone: () async {
           _isConnected = false;
-          await reconnect(duration: const Duration(seconds: 1), url: url);
+          if (_shouldReconnect) {
+            await reconnect(duration: const Duration(seconds: 1), url: url);
+          }
         },
         onError: (err) async {
           onErrCallback(err);
@@ -65,7 +69,7 @@ class WebSocketModel {
       {required Duration duration, required String url}) async {
     Timer.periodic(duration, (timer) async {
       // print("trying to reconnect...");
-      if (_isConnected) {
+      if (_isConnected || !_shouldReconnect) {
         timer.cancel();
         // print("reconnected!");
       } else {
@@ -82,6 +86,7 @@ class WebSocketModel {
 
   Future<void> close() async {
     // print("closing websocket...");
+    _shouldReconnect = false;
     await sink?.close();
     await _streamSubscription?.cancel();
     _isConnected = false;

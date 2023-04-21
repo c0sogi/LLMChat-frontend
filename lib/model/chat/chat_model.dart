@@ -103,11 +103,6 @@ class ChatModel {
 
     _webSocketModel!.sendJson({
       "msg": "/retry",
-      "translate": false,
-      "chat_room_id": _chatRoomId,
-    });
-    _webSocketModel!.sendJson({
-      "msg": lastUserMessage,
       "translate": isTranslateToggled,
       "chat_room_id": _chatRoomId,
     });
@@ -128,7 +123,7 @@ class ChatModel {
     );
     _webSocketModel!.sendJson({
       "msg": "/clear",
-      "translate": false,
+      "translate": isTranslateToggled,
       "chat_room_id": _chatRoomId,
     });
     _startQuerying();
