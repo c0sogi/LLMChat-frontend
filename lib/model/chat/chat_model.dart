@@ -6,7 +6,8 @@ import '../../model/message/message_model.dart';
 class ChatModel {
   bool isTranslateToggled = false;
   bool isTalking = false;
-  bool isQuerying = false;
+  bool _isQuerying = false;
+  bool _isInitialized = false;
   WebSocketModel? _webSocketModel;
   final int _chatRoomId;
   final List<MessageModel> _messages = <MessageModel>[];
@@ -14,7 +15,8 @@ class ChatModel {
 
   int get length => _messages.length;
   List<MessageModel> get messages => _messages;
-  bool get ready => !isQuerying && (_webSocketModel?.isConnected ?? false);
+  bool get ready =>
+      !_isQuerying && (_webSocketModel?.isConnected ?? false) && _isInitialized;
 
   ChatModel({
     required int chatRoomId,
@@ -214,6 +216,7 @@ class ChatModel {
           datetime: parseFromTimestamp(msg["timestamp"]),
         );
       }
+      _isInitialized = true;
       return;
     }
     isTalking
@@ -267,11 +270,11 @@ class ChatModel {
 
   void _onMessageComplete() {
     isTalking = false;
-    isQuerying = false;
+    _isQuerying = false;
     lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
   }
 
   void _startQuerying() {
-    isQuerying = true;
+    _isQuerying = true;
   }
 }

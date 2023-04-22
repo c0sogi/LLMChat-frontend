@@ -75,8 +75,12 @@ class WebSocketModel {
       } else {
         try {
           // print("trying to reconnect...");
-          await close();
-          await connect(url);
+          await sink?.close();
+          await _streamSubscription?.cancel();
+          kIsWeb
+              ? _channel = HtmlWebSocketChannel.connect(url)
+              : _channel = IOWebSocketChannel.connect(url);
+          await _listen(url);
         } catch (e) {
           // print("reconnect failed: $e");
         }
