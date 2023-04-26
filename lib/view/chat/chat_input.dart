@@ -54,13 +54,11 @@ class BottomToolbar extends StatelessWidget {
         IconButton(
           onPressed: () => Get.find<ChatViewModel>().uploadAudio(),
           icon: const Icon(Icons.mic),
-          tooltip: '음원 업로드',
         ),
         // Upload image button
         IconButton(
           onPressed: () => Get.find<ChatViewModel>().uploadImage(),
           icon: const Icon(Icons.image),
-          tooltip: '사진 업로드',
         ),
         // Expanded box
         Expanded(
@@ -94,17 +92,14 @@ class MessageButtons extends StatelessWidget {
         IconButton(
           onPressed: () => Get.find<ChatViewModel>().clearChat(),
           icon: const Icon(Icons.clear_all),
-          tooltip: '채팅 초기화',
         ),
         IconButton(
           onPressed: () => Get.find<ChatViewModel>().resendMessage(),
           icon: const Icon(Icons.refresh),
-          tooltip: '재전송',
         ),
         IconButton(
           onPressed: () => Get.find<ChatViewModel>().sendMessage(),
           icon: const Icon(Icons.send),
-          tooltip: '전송',
         ),
       ],
     );
