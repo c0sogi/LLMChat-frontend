@@ -30,19 +30,15 @@ class LoginModel {
   final AuthService _authService = AuthService();
 
   final List<dynamic> _apiKeys = <dynamic>[];
-  final List<int> _chatrooms = <int>[];
   String _jwtToken = '';
   String _selectedApiKey = '';
-  final int _selectedChatroom = 0;
   bool isRemembered = false;
   String _username = "";
 
   GlobalKey<FormBuilderState> get formKey => _formKey;
   List<dynamic> get apiKeys => _apiKeys;
-  List<int> get chatRooms => _chatrooms;
   String get jwtToken => _jwtToken;
   String get selectedApiKey => _selectedApiKey;
-  int get selectedChatroom => _selectedChatroom;
   String get username => _username;
 
   Future<SnackBarModel?> init() async {
@@ -68,7 +64,7 @@ class LoginModel {
         authorization: token,
         url: Config.fetchApiKeysUrl,
         successCode: 200,
-        messageOnFail: "API 키를 불러오는데 실패하였습니다.",
+        messageOnFail: "Failed to fetch API Keys",
         onSuccess: (dynamic body) async {
           _apiKeys.assignAll(body);
         },
@@ -77,18 +73,10 @@ class LoginModel {
           authorization: token,
           url: Config.fetchUserInfoUrl,
           successCode: 200,
-          messageOnFail: "사용자 정보를 불러오는데 실패하였습니다.",
+          messageOnFail: "Failed to fetch user info",
           onSuccess: (dynamic body) async {
             _username = body['email'];
           }),
-      // FetchUtils.fetch(
-      //     authorization: token,
-      //     url: Config.fetchUserChatrooms,
-      //     successCode: 200,
-      //     messageOnFail: "채팅방 정보를 불러오는데 실패하였습니다.",
-      //     onSuccess: (dynamic body) async {
-      //       _chatrooms.assignAll(body);
-      //     }),
     ]);
     // If all the results are null, return null. Otherwise, return the joined string.
     // This is because the result of Future.wait is a List of Future<T> and we want to
@@ -117,8 +105,8 @@ class LoginModel {
       statusCode: response.statusCode,
       successCode: 201,
       messageOnSuccess: null,
-      messageOnFail: "회원가입에 실패하였습니다.",
-      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
+      messageOnFail: "Failed to register.",
+      messageOnTokenExpired: "Token expired. Please login again.",
       onSuccess: (dynamic body) async {
         final String? errorMessages = await onGetToken(
           jsonDecode(response.body)['Authorization'],
@@ -129,8 +117,8 @@ class LoginModel {
       },
     );
     return SnackBarModel(
-      title: fetchResult == null ? "Success" : "Error",
-      message: fetchResult ?? "회원가입에 성공하였습니다.",
+      title: fetchResult == null ? "Successfully registered" : "Error",
+      message: fetchResult ?? "성공적으로 회원가입 되었습니다.",
       backgroundColor: fetchResult == null ? Colors.green : Colors.red,
     );
   }
@@ -149,8 +137,8 @@ class LoginModel {
       statusCode: response.statusCode,
       successCode: 200,
       messageOnSuccess: null,
-      messageOnFail: "로그인에 실패하였습니다.",
-      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
+      messageOnFail: "Failed to login.",
+      messageOnTokenExpired: "Token expired. Please login again.",
       onSuccess: (dynamic body) async {
         final String? errorMessages = await onGetToken(
           jsonDecode(response.body)['Authorization'],
@@ -161,8 +149,8 @@ class LoginModel {
       },
     );
     return SnackBarModel(
-      title: fetchResult == null ? "Success" : "Error",
-      message: fetchResult ?? "로그인에 성공하였습니다.",
+      title: fetchResult == null ? "Successfully logged in" : "Error",
+      message: fetchResult ?? "성공적으로 로그인 되었습니다.",
       backgroundColor: fetchResult == null ? Colors.green : Colors.red,
     );
   }
@@ -184,8 +172,8 @@ class LoginModel {
       _jwtToken = storedToken;
       final String? errorMessages = await onGetToken(storedToken);
       return SnackBarModel(
-        title: errorMessages == null ? "Success" : "Error",
-        message: errorMessages ?? "자동로그인에 성공하였습니다.",
+        title: errorMessages == null ? "Successful auto login" : "Error",
+        message: errorMessages ?? "자동 로그인에 성공했습니다.",
         backgroundColor: errorMessages == null ? Colors.green : Colors.red,
         snackPosition: SnackPosition.BOTTOM,
       );

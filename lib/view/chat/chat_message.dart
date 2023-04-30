@@ -8,29 +8,20 @@ import 'package:get/get.dart';
 import 'package:flutter_highlighter/flutter_highlighter.dart';
 import 'package:flutter_highlighter/themes/atom-one-dark.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../../app/app_config.dart';
 
-void copyToClipboard(BuildContext context, String text) {
-  Clipboard.setData(ClipboardData(text: text));
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Copied to clipboard'),
-    ),
-  );
-}
-
 class ChatMessagePlaceholder extends StatelessWidget {
-  final String message;
-  final bool isGptSpeaking;
+  final int index;
   const ChatMessagePlaceholder({
     super.key,
-    required this.message,
-    required this.isGptSpeaking,
+    required this.index,
   });
 
   @override
   Widget build(BuildContext context) {
+    final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
+    final bool isGptSpeaking =
+        chatViewModel.messagePlaceholder[index].isGptSpeaking;
     return Container(
       alignment: isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -44,7 +35,7 @@ class ChatMessagePlaceholder extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isGptSpeaking ? Colors.orange[600] : Colors.blue[600],
+              color: isGptSpeaking ? Colors.orange[800] : Colors.blue[600],
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(12),
                 topRight: const Radius.circular(12),
@@ -56,7 +47,9 @@ class ChatMessagePlaceholder extends StatelessWidget {
                     : const Radius.circular(0),
               ),
             ),
-            child: Text(message, style: const TextStyle(color: Colors.white)),
+            child: MarkdownWidget(
+              text: chatViewModel.messagePlaceholder[index].message.value,
+            ),
           )
         ],
       ),
@@ -78,10 +71,13 @@ class ChatMessage extends StatelessWidget {
 
     return GestureDetector(
       onLongPress: () {
-        copyToClipboard(
-          context,
-          chatViewModel.messages![index].message.value,
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Copied to clipboard'),
+          ),
         );
+        Clipboard.setData(
+            ClipboardData(text: chatViewModel.messages![index].message.value));
       },
       child: Container(
         alignment: isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
@@ -303,7 +299,12 @@ class CodeblockHeader extends StatelessWidget {
               const Icon(Icons.content_copy, size: 18),
               TextButton(
                   onPressed: () {
-                    copyToClipboard(context, text.textContent);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Copied to clipboard'),
+                      ),
+                    );
+                    Clipboard.setData(ClipboardData(text: text.textContent));
                   },
                   child:
                       const Text('복사', style: TextStyle(color: Colors.white))),

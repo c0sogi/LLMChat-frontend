@@ -24,12 +24,16 @@ class ChatViewModel extends GetxController {
       });
   final ScrollController _scrollController = ScrollController();
   final RxBool isChatModelInitialized = false.obs;
+  final RxList<String> chatRoomIds = <String>[].obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
-      message: "좌측 상단 메뉴에서 로그인 후 API키를 선택해야 이용할 수 있습니다.",
+      message:
+          "You can start chat by select API key from the top left side. If the API key does not exist, you must create an API key through the website administrator. \n\n왼쪽 상단에서 API 키를 선택하여 채팅을 시작할 수 있습니다. 만약 API키가 존재하지 않는 경우, 사이트 관리자를 통해 API키를 생성해야 합니다.",
       isFinished: true,
       isGptSpeaking: true,
-    )
+    ),
+    MessageModel(
+        message: Config.markdownExample, isFinished: true, isGptSpeaking: true)
   ];
   bool _autoScroll = true;
 
@@ -100,7 +104,6 @@ class ChatViewModel extends GetxController {
 
   Future<void> beginChat({
     required String apiKey,
-    required int chatRoomId,
   }) async {
     Get.find<ThemeViewModel>().toggleTheme(true);
     // check channel is late initialized or not
@@ -109,8 +112,9 @@ class ChatViewModel extends GetxController {
       _chatModel?.update((_) => {});
     }
     _chatModel = ChatModel(
-        chatRoomId: chatRoomId,
-        onMessageCallback: (dynamic raw) => _chatModel?.update((val) {})).obs;
+      updateViewCallback: (dynamic raw) => _chatModel?.update((val) {}),
+      chatRoomIds: chatRoomIds,
+    ).obs;
     await _chatModel!.value.beginChat(apiKey);
     _chatModel!.update((_) {});
     isChatModelInitialized(true);
@@ -122,7 +126,22 @@ class ChatViewModel extends GetxController {
     _chatModel?.update((_) {});
   }
 
+  void changeChatRoom({required String chatRoomId}) {
+    _chatModel?.update((val) => val!.changeChatRoom(
+          chatRoomId: chatRoomId,
+        ));
+  }
+
+  void deleteChatRoom({required String chatRoomId}) {
+    _chatModel?.update((val) => val!.deleteChatRoom(
+          chatRoomId: chatRoomId,
+        ));
+  }
+
   void sendMessage() {
+    if (messageController.text.isEmpty) {
+      return;
+    }
     _chatModel?.update((val) {
       if (val!.sendUserMessage(message: messageController.text)) {
         messageController.clear();
@@ -134,8 +153,10 @@ class ChatViewModel extends GetxController {
     _chatModel?.update((val) => val!.resendUserMessage());
   }
 
-  void clearChat() {
-    _chatModel?.update((val) => val!.clearAllChat());
+  void clearChat({required bool clearViewOnly}) {
+    _chatModel?.update((val) => val!.clearAllChat(
+          clearViewOnly: clearViewOnly,
+        ));
   }
 
   void toggleTranslate() {
@@ -146,7 +167,7 @@ class ChatViewModel extends GetxController {
     // TODO: Implement upload image logic
     _chatModel?.update(
       (val) => val!.addChatMessage(
-        message: "이미지 업로드 [미지원]",
+        message: "Uploading image not supported yet",
         isGptSpeaking: false,
         isFinished: true,
       ),
@@ -157,7 +178,7 @@ class ChatViewModel extends GetxController {
     // TODO: Implement upload audio logic
     _chatModel?.update(
       (val) => val!.addChatMessage(
-        message: "음원 업로드 [미지원]",
+        message: "Uploading audio not supported yet",
         isGptSpeaking: false,
         isFinished: true,
       ),

@@ -105,12 +105,7 @@ class ChatView extends StatelessWidget {
                         controller: chatViewModel.scrollController,
                         itemCount: chatViewModel.messagePlaceholder.length,
                         itemBuilder: (context, index) {
-                          return ChatMessagePlaceholder(
-                            message: chatViewModel
-                                .messagePlaceholder[index].message.value,
-                            isGptSpeaking: chatViewModel
-                                .messagePlaceholder[index].isGptSpeaking,
-                          );
+                          return ChatMessagePlaceholder(index: index);
                         },
                       ),
               ),

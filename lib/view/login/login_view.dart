@@ -27,13 +27,18 @@ class LoginForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 50),
-        const SizedBox(height: 30),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: FormBuilder(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const SizedBox(height: 50),
+          const SizedBox(height: 30),
+          FormBuilder(
             key: Get.find<LoginViewModel>().formKey,
             child: Column(
               children: const [
@@ -45,8 +50,8 @@ class LoginForm extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -58,63 +63,73 @@ class AuthButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final LoginViewModel loginViewModel = Get.find<LoginViewModel>();
     return Obx(
-      () => Row(
+      () => Column(
         crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Row(
             children: [
-              Checkbox(
-                value: loginViewModel.isRemembered,
-                onChanged: (bool? value) {
-                  if (value != null) {
-                    loginViewModel.isRemembered = value;
-                  }
-                },
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Remember me',
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Checkbox(
+                    value: loginViewModel.isRemembered,
+                    onChanged: (bool? value) {
+                      if (value != null) {
+                        loginViewModel.isRemembered = value;
+                      }
+                    },
+                  ),
+                ],
               ),
-              const Text(
-                '로그인 유지',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              const Expanded(child: SizedBox()),
             ],
           ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Row(
-                children: [
-                  Container(
-                    // 회원가입 버튼
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 10),
-                        TextButton(
-                          onPressed: () async {
-                            if (loginViewModel.formKey.currentState!
-                                .validate()) {
-                              loginViewModel.isLoading(true);
-                              await loginViewModel
-                                  .register(
-                                    loginViewModel.formKey.currentState!
-                                        .fields['email']!.value,
-                                    loginViewModel.formKey.currentState!
-                                        .fields['password']!.value,
-                                  )
-                                  .then((value) =>
-                                      loginViewModel.isLoading(false));
-                            }
-                          },
-                          child: const Text('회원가입'),
-                        ),
-                      ],
+              Container(
+                // 회원가입 버튼
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () async {
+                        if (loginViewModel.formKey.currentState!.validate()) {
+                          loginViewModel.isLoading(true);
+                          await loginViewModel
+                              .register(
+                                loginViewModel.formKey.currentState!
+                                    .fields['email']!.value,
+                                loginViewModel.formKey.currentState!
+                                    .fields['password']!.value,
+                              )
+                              .then((value) => loginViewModel.isLoading(false));
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                      ),
+                      child: const Text(
+                        'Register',
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               ElevatedButton(
                 // 로그인 버튼
@@ -133,12 +148,19 @@ class AuthButtons extends StatelessWidget {
                               .then((_) => loginViewModel.isLoading(false));
                         }
                       },
-                child: SizedBox(
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: loginViewModel.isLoading.value
                       ? const RefreshProgressIndicator(
                           color: Colors.white,
                         )
-                      : const Text('로그인'),
+                      : const Text('Login', textAlign: TextAlign.center),
                 ),
               ),
             ],
@@ -157,13 +179,13 @@ class EmailForm extends StatelessWidget {
     return FormBuilderTextField(
       name: 'email',
       decoration: const InputDecoration(
-        labelText: '이메일',
+        labelText: 'Email',
         border: OutlineInputBorder(),
         prefixIcon: Icon(Icons.email),
       ),
       validator: FormBuilderValidators.compose([
-        FormBuilderValidators.required(errorText: "이메일은 필수입니다."),
-        FormBuilderValidators.email(errorText: "이메일 형식이 아닙니다."),
+        FormBuilderValidators.required(errorText: "E-mail is required."),
+        FormBuilderValidators.email(errorText: "Invalid E-mail."),
       ]),
       keyboardType: TextInputType.emailAddress,
     );
@@ -178,15 +200,16 @@ class PasswordForm extends StatelessWidget {
     return FormBuilderTextField(
       name: 'password',
       decoration: const InputDecoration(
-        labelText: '비밀번호',
+        labelText: 'Password',
         border: OutlineInputBorder(),
         prefixIcon: Icon(Icons.lock),
       ),
       obscureText: true,
       validator: FormBuilderValidators.compose(
         [
-          FormBuilderValidators.required(errorText: "비밀번호는 필수입니다."),
-          FormBuilderValidators.minLength(6, errorText: "비밀번호는 6자 이상입니다."),
+          FormBuilderValidators.required(errorText: "Password is required."),
+          FormBuilderValidators.minLength(6,
+              errorText: "Password must be at least 6 characters."),
         ],
       ),
     );
@@ -207,11 +230,12 @@ class ApiKeysList extends StatelessWidget {
             elevation: 5,
             child: ListTile(
               title: Text(
-                "${loginViewModel.username}님 안녕하세요!",
+                "Welcome ${loginViewModel.username}!",
                 style: const TextStyle(color: Colors.white),
               ),
               subtitle: const Text(
-                "여기를 눌러 로그아웃 하세요.",
+                "Logout",
+                textAlign: TextAlign.end,
                 style: TextStyle(color: Colors.white70),
               ),
               onTap: loginViewModel.logout,
@@ -223,7 +247,13 @@ class ApiKeysList extends StatelessWidget {
             itemBuilder: (context, index) {
               final apiKey = loginViewModel.apiKeys[index];
               return Card(
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
                 child: ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   title: Text(apiKey['user_memo']),
                   subtitle: Text(
                     DateFormat('yyyy-MM-dd hh:mm a')

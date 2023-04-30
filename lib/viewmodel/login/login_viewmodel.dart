@@ -12,11 +12,9 @@ class LoginViewModel extends GetxController {
 
   String get jwtToken => _loginModel.value.jwtToken;
   List get apiKeys => _loginModel.value.apiKeys;
-  List get chatRooms => _loginModel.value.chatRooms;
   GlobalKey<FormBuilderState> get formKey => _loginModel.value.formKey;
   String get username => _loginModel.value.username;
   String get selectedApiKey => _loginModel.value.selectedApiKey;
-  int get selectedChatroom => _loginModel.value.selectedChatroom;
   bool get isRemembered => _loginModel.value.isRemembered;
   set isRemembered(bool value) => _loginModel.update((val) {
         val!.isRemembered = value;
@@ -87,13 +85,12 @@ class LoginViewModel extends GetxController {
     // pop all dialogs until the root dialog is reached
     scaffoldKey.currentState?.closeDrawer();
     Get.snackbar(
-      'API Key Selected',
+      'API Key $userMemo Selected',
       '$userMemo가 선택되었습니다.',
       duration: const Duration(seconds: 1),
     );
     await Get.find<ChatViewModel>().beginChat(
       apiKey: accessKey,
-      chatRoomId: selectedChatroom,
     );
   }
 }

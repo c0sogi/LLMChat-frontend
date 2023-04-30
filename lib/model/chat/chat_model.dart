@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_web/model/chat/websocket_model.dart';
+import 'package:get/get.dart';
 import '../../app/app_config.dart';
 import '../../model/message/message_model.dart';
 
@@ -9,9 +10,10 @@ class ChatModel {
   bool _isQuerying = false;
   bool _isInitialized = false;
   WebSocketModel? _webSocketModel;
-  final int _chatRoomId;
+  String? _chatRoomId;
   final List<MessageModel> _messages = <MessageModel>[];
-  final void Function(dynamic) _onMessageCallback;
+  final void Function(dynamic) _updateViewCallback;
+  final RxList<String> _chatRoomIds;
 
   int get length => _messages.length;
   List<MessageModel> get messages => _messages;
@@ -19,28 +21,28 @@ class ChatModel {
       !_isQuerying && (_webSocketModel?.isConnected ?? false) && _isInitialized;
 
   ChatModel({
-    required int chatRoomId,
-    required void Function(dynamic) onMessageCallback,
-  })  : _chatRoomId = chatRoomId,
-        _onMessageCallback = onMessageCallback;
+    required void Function(dynamic) updateViewCallback,
+    required RxList<String> chatRoomIds,
+  })  : _updateViewCallback = updateViewCallback,
+        _chatRoomIds = chatRoomIds;
 
   Future<void> beginChat(String apiKey) async {
     // print("beginning chat");
     _webSocketModel ??= WebSocketModel(
       onMessageCallback: (dynamic raw) {
         _messageHandler(raw);
-        _onMessageCallback(raw);
+        _updateViewCallback(raw);
       },
       onErrCallback: (dynamic err) => {
         _onMessageComplete(),
       },
       onSuccessConnectCallback: () => addChatMessage(
-        message: '서버 연결에 성공했습니다.',
+        message: 'Connected to server.',
         isGptSpeaking: true,
         isFinished: true,
       ),
       onFailConnectCallback: () => addChatMessage(
-        message: "서버 연결에 실패했습니다.",
+        message: "Couldn't connect to server.",
         isGptSpeaking: true,
         isFinished: true,
       ),
@@ -53,7 +55,7 @@ class ChatModel {
       // print("ending chat");
       await _webSocketModel!.close();
       addChatMessage(
-        message: '채팅이 종료되었습니다.',
+        message: 'Disconnected from server.',
         isGptSpeaking: true,
         isFinished: true,
       );
@@ -64,18 +66,52 @@ class ChatModel {
     isTranslateToggled = !isTranslateToggled;
   }
 
+  void changeChatRoom({
+    required String chatRoomId,
+  }) {
+    if (!ready) {
+      return;
+    }
+    if (_chatRoomId == chatRoomId) {
+      addChatMessage(
+        message: "You are already in the same chatroom: $chatRoomId",
+        isGptSpeaking: true,
+        isFinished: true,
+        isLoading: false,
+      );
+      return;
+    }
+    clearAllChat(clearViewOnly: true);
+    _chatRoomId = chatRoomId;
+    _webSocketModel!.sendJson({
+      "msg": "/echo You are now in the chatroom: $chatRoomId",
+      "translate": isTranslateToggled,
+      "chat_room_id": chatRoomId
+    });
+    _startQuerying();
+  }
+
+  void deleteChatRoom({
+    required String chatRoomId,
+  }) {
+    if (!ready) {
+      return;
+    }
+    clearAllChat(clearViewOnly: true);
+    _webSocketModel!.sendJson({
+      "msg": "/deletechatroom",
+      "translate": isTranslateToggled,
+      "chat_room_id": chatRoomId
+    });
+    _startQuerying();
+  }
+
   bool sendUserMessage({
     required String message,
   }) {
-    if (message.isEmpty || !ready) {
+    if (!ready) {
       return false;
     }
-
-    _webSocketModel!.sendJson({
-      "msg": message,
-      "translate": isTranslateToggled,
-      "chat_room_id": _chatRoomId
-    });
     addChatMessage(
       message: message,
       isGptSpeaking: false,
@@ -87,6 +123,11 @@ class ChatModel {
       isFinished: false,
       isLoading: true,
     );
+    _webSocketModel!.sendJson({
+      "msg": message,
+      "translate": isTranslateToggled,
+      "chat_room_id": _chatRoomId
+    });
     _startQuerying();
     return true;
   }
@@ -111,12 +152,15 @@ class ChatModel {
     _startQuerying();
   }
 
-  void clearAllChat() {
+  void clearAllChat({required bool clearViewOnly}) {
     if (!ready) {
       return;
     }
 
     _messages.clear();
+    if (clearViewOnly) {
+      return;
+    }
     addChatMessage(
       message: "",
       isGptSpeaking: true,
@@ -196,19 +240,21 @@ class ChatModel {
 
   void _messageHandler(dynamic rawText) {
     final Map<String, dynamic> rcvd = jsonDecode(rawText);
-    final int chatRoomId = rcvd["chatRoomId"] ?? -1;
+    // print("rcvd: $rcvd");
+    _chatRoomId = rcvd["chat_room_id"];
+    final bool isGptSpeaking = rcvd["is_user"] ? false : true;
     final String message = rcvd["msg"] ?? "";
     final bool isFinished = rcvd["finish"] ?? false;
-    final bool isGptSpeaking = rcvd["is_user"] ?? false ? false : true;
     final bool init = rcvd["init"] ?? false;
-    // if (chatRoomId != _chatRoomId) {
-    //   return;
-    // }
-    // print("Received: $rcvd");
     if (init) {
       // message is list of messages in format of JSON, so we need to parse it
-      final List<dynamic> messages = jsonDecode(message);
-      for (final Map<String, dynamic> msg in messages) {
+      final Map<String, dynamic> initMsg = jsonDecode(message);
+      final List<String> allChatRoomIds =
+          List<String>.from(initMsg["chat_room_ids"]);
+      _chatRoomIds.assignAll(allChatRoomIds);
+      final List<Map<String, dynamic>> previousChats =
+          List<Map<String, dynamic>>.from(initMsg["previous_chats"]);
+      for (final Map<String, dynamic> msg in previousChats) {
         addChatMessage(
           message: msg["content"] ?? "",
           isGptSpeaking: msg["is_user"] ?? false ? false : true,
@@ -217,6 +263,7 @@ class ChatModel {
         );
       }
       _isInitialized = true;
+      _onMessageComplete();
       return;
     }
     isTalking

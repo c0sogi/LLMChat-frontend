@@ -22,7 +22,7 @@ class ChatInput extends StatelessWidget {
                   textAlignVertical: TextAlignVertical.center,
                   controller: Get.find<ChatViewModel>().messageController,
                   decoration: InputDecoration(
-                    hintText: '여기에 메시지를 입력하세요',
+                    hintText: 'Enter message here...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -90,7 +90,8 @@ class MessageButtons extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         IconButton(
-          onPressed: () => Get.find<ChatViewModel>().clearChat(),
+          onPressed: () =>
+              Get.find<ChatViewModel>().clearChat(clearViewOnly: false),
           icon: const Icon(Icons.clear_all),
         ),
         IconButton(
