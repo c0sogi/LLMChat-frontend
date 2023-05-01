@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -15,14 +16,70 @@ class SnackBarModel {
   final Color backgroundColor;
   final Duration duration;
   final SnackPosition snackPosition;
+  final Icon? icon;
 
   SnackBarModel({
     required this.title,
     required this.message,
     required this.backgroundColor,
+    required this.snackPosition,
     this.duration = const Duration(seconds: 1),
-    this.snackPosition = SnackPosition.TOP,
+    this.icon,
   });
+}
+
+class ErrorSnackBarModel extends SnackBarModel {
+  ErrorSnackBarModel({
+    required String title,
+    required String message,
+    Color backgroundColor = ThemeViewModel.errorColor,
+    Duration duration = const Duration(seconds: 1),
+    SnackPosition snackPosition = SnackPosition.TOP,
+    Icon? icon = const Icon(Icons.error),
+  }) : super(
+          title: title,
+          message: message,
+          backgroundColor: backgroundColor,
+          duration: duration,
+          snackPosition: snackPosition,
+          icon: icon,
+        );
+}
+
+class SuccessSnackBarModel extends SnackBarModel {
+  SuccessSnackBarModel({
+    required String title,
+    required String message,
+    Color backgroundColor = ThemeViewModel.successColor,
+    Duration duration = const Duration(seconds: 1),
+    SnackPosition snackPosition = SnackPosition.BOTTOM,
+    Icon? icon = const Icon(Icons.check),
+  }) : super(
+          title: title,
+          message: message,
+          backgroundColor: backgroundColor,
+          duration: duration,
+          snackPosition: snackPosition,
+          icon: icon,
+        );
+}
+
+class InfoSnackBarModel extends SnackBarModel {
+  InfoSnackBarModel({
+    required String title,
+    required String message,
+    Color backgroundColor = ThemeViewModel.infoColor,
+    Duration duration = const Duration(seconds: 1),
+    SnackPosition snackPosition = SnackPosition.BOTTOM,
+    Icon? icon = const Icon(Icons.info),
+  }) : super(
+          title: title,
+          message: message,
+          backgroundColor: backgroundColor,
+          duration: duration,
+          snackPosition: snackPosition,
+          icon: icon,
+        );
 }
 
 class LoginModel {
@@ -60,7 +117,8 @@ class LoginModel {
       await _authService.saveToken(token);
     }
     final List<String?> result = await Future.wait([
-      FetchUtils.fetch(
+      JsonFetchUtils.fetch(
+        fetchMethod: FetchMethod.get,
         authorization: token,
         url: Config.fetchApiKeysUrl,
         successCode: 200,
@@ -69,7 +127,8 @@ class LoginModel {
           _apiKeys.assignAll(body);
         },
       ),
-      FetchUtils.fetch(
+      JsonFetchUtils.fetch(
+          fetchMethod: FetchMethod.get,
           authorization: token,
           url: Config.fetchUserInfoUrl,
           successCode: 200,
@@ -100,7 +159,7 @@ class LoginModel {
       },
       body: jsonEncode({'email': email, 'password': password}),
     );
-    final String? fetchResult = await FetchUtils.getFetchResult<String?>(
+    final String? fetchResult = await JsonFetchUtils.getFetchResult<String?>(
       body: response.body,
       statusCode: response.statusCode,
       successCode: 201,
@@ -116,11 +175,15 @@ class LoginModel {
         }
       },
     );
-    return SnackBarModel(
-      title: fetchResult == null ? "Successfully registered" : "Error",
-      message: fetchResult ?? "성공적으로 회원가입 되었습니다.",
-      backgroundColor: fetchResult == null ? Colors.green : Colors.red,
-    );
+    return fetchResult == null
+        ? SuccessSnackBarModel(
+            title: "Successfully registered",
+            message: "성공적으로 회원가입 되었습니다.",
+          )
+        : ErrorSnackBarModel(
+            title: "Error",
+            message: fetchResult,
+          );
   }
 
   Future<SnackBarModel> login(String email, String password) async {
@@ -132,7 +195,7 @@ class LoginModel {
       },
       body: jsonEncode({'email': email, 'password': password}),
     );
-    final String? fetchResult = await FetchUtils.getFetchResult<String?>(
+    final String? fetchResult = await JsonFetchUtils.getFetchResult<String?>(
       body: response.body,
       statusCode: response.statusCode,
       successCode: 200,
@@ -148,11 +211,15 @@ class LoginModel {
         }
       },
     );
-    return SnackBarModel(
-      title: fetchResult == null ? "Successfully logged in" : "Error",
-      message: fetchResult ?? "성공적으로 로그인 되었습니다.",
-      backgroundColor: fetchResult == null ? Colors.green : Colors.red,
-    );
+    return fetchResult == null
+        ? SuccessSnackBarModel(
+            title: "Successfully logged in",
+            message: "성공적으로 로그인 되었습니다.",
+          )
+        : ErrorSnackBarModel(
+            title: "Error",
+            message: fetchResult,
+          );
   }
 
   Future<void> logout() async {
@@ -171,13 +238,39 @@ class LoginModel {
     if (storedToken != null) {
       _jwtToken = storedToken;
       final String? errorMessages = await onGetToken(storedToken);
-      return SnackBarModel(
-        title: errorMessages == null ? "Successful auto login" : "Error",
-        message: errorMessages ?? "자동 로그인에 성공했습니다.",
-        backgroundColor: errorMessages == null ? Colors.green : Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      return errorMessages == null
+          ? SuccessSnackBarModel(
+              title: "Successful auto login",
+              message: "자동 로그인에 성공했습니다.",
+            )
+          : ErrorSnackBarModel(
+              title: "Error",
+              message: errorMessages,
+            );
     }
     return null;
+  }
+
+  Future<SnackBarModel> createNewApiKey({required String userMemo}) async {
+    final postResult = await JsonFetchUtils.fetch(
+      fetchMethod: FetchMethod.post,
+      authorization: _jwtToken,
+      url: Config.postApiKeysUrl,
+      body: {"user_memo": userMemo},
+      successCode: 201,
+      messageOnFail: "Failed to create API key.",
+      onSuccess: (dynamic body) async {
+        _apiKeys.add(body);
+      },
+    );
+    return postResult == null
+        ? SuccessSnackBarModel(
+            title: "Successfully created API key",
+            message: "API 키가 성공적으로 생성되었습니다.",
+          )
+        : ErrorSnackBarModel(
+            title: "Error",
+            message: postResult,
+          );
   }
 }

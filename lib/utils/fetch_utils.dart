@@ -1,26 +1,51 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class FetchUtils {
+enum FetchMethod {
+  get,
+  post,
+  put,
+  delete,
+}
+
+class JsonFetchUtils {
+  static const Map<String, String> _defaultHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
   static Future<String?> fetch({
-    required String authorization,
+    required FetchMethod fetchMethod,
     required String url,
     required int successCode,
     required String messageOnFail,
     required Future<void> Function(dynamic)? onSuccess,
+    String? authorization,
+    Object? body,
   }) async {
-    // Fetch some information from the server
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': authorization,
-      },
-    );
+    final Map<String, String> headers = {
+      ..._defaultHeaders,
+      if (authorization != null) 'Authorization': authorization
+    };
+    final encodedBody = body != null ? jsonEncode(body) : null;
+    late final http.Response res;
+    switch (fetchMethod) {
+      case FetchMethod.get:
+        res = await http.get(Uri.parse(url), headers: headers);
+        break;
+      case FetchMethod.post:
+        res = await http.post(Uri.parse(url),
+            body: encodedBody, headers: headers);
+        break;
+      case FetchMethod.put:
+        res =
+            await http.put(Uri.parse(url), body: encodedBody, headers: headers);
+        break;
+      case FetchMethod.delete:
+        res = await http.delete(Uri.parse(url), headers: headers);
+    }
     return getFetchResult<String?>(
-      body: response.body,
-      statusCode: response.statusCode,
+      body: res.body,
+      statusCode: res.statusCode,
       successCode: successCode,
       messageOnSuccess: null,
       messageOnFail: messageOnFail,

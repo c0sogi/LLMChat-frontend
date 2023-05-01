@@ -31,6 +31,7 @@ class LoginViewModel extends GetxController {
         duration: snackbar.duration,
         snackPosition: snackbar.snackPosition,
         backgroundColor: snackbar.backgroundColor,
+        icon: snackbar.icon,
       );
     }
     _loginModel.update((_) {});
@@ -54,6 +55,7 @@ class LoginViewModel extends GetxController {
         duration: snackbar.duration,
         backgroundColor: snackbar.backgroundColor,
         snackPosition: snackbar.snackPosition,
+        icon: snackbar.icon,
       );
     });
   }
@@ -67,6 +69,7 @@ class LoginViewModel extends GetxController {
       duration: snackbar.duration,
       backgroundColor: snackbar.backgroundColor,
       snackPosition: snackbar.snackPosition,
+      icon: snackbar.icon,
     );
     _loginModel.update((_) {});
   }
@@ -84,13 +87,34 @@ class LoginViewModel extends GetxController {
     });
     // pop all dialogs until the root dialog is reached
     scaffoldKey.currentState?.closeDrawer();
+    final InfoSnackBarModel snackbar = InfoSnackBarModel(
+      title: 'API Key $userMemo Selected',
+      message: '$userMemo가 선택되었습니다.',
+    );
     Get.snackbar(
-      'API Key $userMemo Selected',
-      '$userMemo가 선택되었습니다.',
-      duration: const Duration(seconds: 1),
+      snackbar.title,
+      snackbar.message,
+      duration: snackbar.duration,
+      backgroundColor: snackbar.backgroundColor,
+      snackPosition: snackbar.snackPosition,
+      icon: snackbar.icon,
     );
     await Get.find<ChatViewModel>().beginChat(
       apiKey: accessKey,
     );
+  }
+
+  Future<void> createNewApiKey({required String userMemo}) async {
+    final SnackBarModel snackbar =
+        await _loginModel.value.createNewApiKey(userMemo: userMemo);
+    Get.snackbar(
+      snackbar.title,
+      snackbar.message,
+      duration: snackbar.duration,
+      backgroundColor: snackbar.backgroundColor,
+      snackPosition: snackbar.snackPosition,
+      icon: snackbar.icon,
+    );
+    _loginModel.update((_) {});
   }
 }

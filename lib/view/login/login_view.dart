@@ -1,22 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../viewmodel/login/login_viewmodel.dart';
+import '../widgets/conversation_list.dart';
 
 class LoginDrawer extends StatelessWidget {
   const LoginDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final LoginViewModel loginViewModel = Get.find<LoginViewModel>();
     return Drawer(
-      child: SingleChildScrollView(
-        child: Obx(
-          () => Get.find<LoginViewModel>().jwtToken.isEmpty
-              ? const LoginForm()
-              : const ApiKeysList(),
-        ),
+      child: Obx(
+        () => loginViewModel.jwtToken.isEmpty
+            ? const LoginForm()
+            : Column(
+                children: [
+                  const LoginHeader(),
+                  const CreateNewApiKey(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const ApiKeysList(),
+                          if (loginViewModel.selectedApiKey.isNotEmpty)
+                            const ConversationList(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (loginViewModel.selectedApiKey.isNotEmpty)
+                    const CreateNewConversation(),
+                ],
+              ),
       ),
     );
   }
@@ -223,51 +242,97 @@ class ApiKeysList extends StatelessWidget {
   Widget build(BuildContext context) {
     final loginViewModel = Get.find<LoginViewModel>();
     return Obx(
-      () => Column(
-        children: [
-          Card(
-            color: Theme.of(context).primaryColor,
+      () => ListView.builder(
+        shrinkWrap: true,
+        itemCount: loginViewModel.apiKeys.length,
+        itemBuilder: (context, index) {
+          final apiKey = loginViewModel.apiKeys[index];
+          return Card(
             elevation: 5,
-            child: ListTile(
-              title: Text(
-                "Welcome ${loginViewModel.username}!",
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: const Text(
-                "Logout",
-                textAlign: TextAlign.end,
-                style: TextStyle(color: Colors.white70),
-              ),
-              onTap: loginViewModel.logout,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
+            child: ListTile(
+              leading: const Icon(Icons.vpn_key),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              title: Text(apiKey['user_memo']),
+              subtitle: Text(
+                DateFormat('yyyy-MM-dd hh:mm a')
+                    .format(DateTime.parse(apiKey['created_at'])),
+              ),
+              onTap: () async => await loginViewModel.onClickApiKey(
+                accessKey: apiKey['access_key'],
+                userMemo: apiKey['user_memo'],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class LoginHeader extends StatelessWidget {
+  const LoginHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final loginViewModel = Get.find<LoginViewModel>();
+    return Obx(
+      () => Card(
+        color: loginViewModel.selectedApiKey.isEmpty
+            ? ThemeViewModel.idleColor
+            : ThemeViewModel.activeColor,
+        elevation: 5,
+        child: ListTile(
+          title: Text(
+            "Welcome ${loginViewModel.username}!",
+            style: const TextStyle(color: Colors.white),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: loginViewModel.apiKeys.length,
-            itemBuilder: (context, index) {
-              final apiKey = loginViewModel.apiKeys[index];
-              return Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  title: Text(apiKey['user_memo']),
-                  subtitle: Text(
-                    DateFormat('yyyy-MM-dd hh:mm a')
-                        .format(DateTime.parse(apiKey['created_at'])),
-                  ),
-                  onTap: () async => await loginViewModel.onClickApiKey(
-                    accessKey: apiKey['access_key'],
-                    userMemo: apiKey['user_memo'],
-                  ),
-                ),
-              );
-            },
+          subtitle: const Text(
+            "Logout",
+            textAlign: TextAlign.end,
+            style: TextStyle(color: Colors.white70),
           ),
-        ],
+          onTap: loginViewModel.logout,
+        ),
+      ),
+    );
+  }
+}
+
+class CreateNewApiKey extends StatelessWidget {
+  const CreateNewApiKey({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final loginViewModel = Get.find<LoginViewModel>();
+    return Card(
+      color: Theme.of(context).primaryColor,
+      elevation: 5,
+      child: ListTile(
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+            Icon(
+              Icons.vpn_key,
+              color: Colors.white,
+            ),
+          ],
+        ),
+        tileColor: Theme.of(context).secondaryHeaderColor,
+        title: const Text(
+          "Create New API Key",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          textAlign: TextAlign.start,
+        ),
+        onTap: () async =>
+            await loginViewModel.createNewApiKey(userMemo: "ChatGPT API Key"),
       ),
     );
   }

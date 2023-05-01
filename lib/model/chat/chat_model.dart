@@ -69,22 +69,13 @@ class ChatModel {
   void changeChatRoom({
     required String chatRoomId,
   }) {
-    if (!ready) {
-      return;
-    }
-    if (_chatRoomId == chatRoomId) {
-      addChatMessage(
-        message: "You are already in the same chatroom: $chatRoomId",
-        isGptSpeaking: true,
-        isFinished: true,
-        isLoading: false,
-      );
+    if (!ready || _isQuerying || _chatRoomId == chatRoomId) {
       return;
     }
     clearAllChat(clearViewOnly: true);
     _chatRoomId = chatRoomId;
     _webSocketModel!.sendJson({
-      "msg": "/echo You are now in the chatroom: $chatRoomId",
+      "msg": "/echo You are now in chat room `$chatRoomId`",
       "translate": isTranslateToggled,
       "chat_room_id": chatRoomId
     });

@@ -9,7 +9,7 @@ class Config {
   static const String registerUrl = "$httpUrl/api/auth/register/email";
   static const String fetchApiKeysUrl = "$httpUrl/api/user/apikeys";
   static const String fetchUserInfoUrl = "$httpUrl/api/user/me";
-  static const String fetchUserChatrooms = "$httpUrl/api/user/chatrooms";
+  static const String postApiKeysUrl = "$httpUrl/api/user/apikeys";
 
   static const int scrollOffset = 0;
   static const List<String> supportedLanguages = [

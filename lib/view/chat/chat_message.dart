@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:get/get.dart';
@@ -35,7 +36,9 @@ class ChatMessagePlaceholder extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isGptSpeaking ? Colors.orange[800] : Colors.blue[600],
+              color: isGptSpeaking
+                  ? ThemeViewModel.idleColor
+                  : ThemeViewModel.activeColor,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(12),
                 topRight: const Radius.circular(12),
