@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -96,8 +97,8 @@ class WebSocketModel {
     _isConnected = false;
   }
 
-  void send(String message) {
-    sink?.add(message);
+  void sendBytes(Uint8List? bytes) {
+    sink?.add(bytes);
   }
 
   void sendJson(Map<String, dynamic> json) {

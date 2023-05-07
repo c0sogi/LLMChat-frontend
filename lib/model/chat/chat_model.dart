@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_web/model/chat/websocket_model.dart';
 import 'package:get/get.dart';
 import '../../app/app_config.dart';
@@ -72,6 +73,7 @@ class ChatModel {
     if (!ready || _isQuerying || _chatRoomId == chatRoomId) {
       return;
     }
+    _startQuerying();
     clearAllChat(clearViewOnly: true);
     _chatRoomId = chatRoomId;
     _webSocketModel!.sendJson({
@@ -79,7 +81,6 @@ class ChatModel {
       "translate": isTranslateToggled,
       "chat_room_id": chatRoomId
     });
-    _startQuerying();
   }
 
   void deleteChatRoom({
@@ -88,13 +89,13 @@ class ChatModel {
     if (!ready) {
       return;
     }
+    _startQuerying();
     clearAllChat(clearViewOnly: true);
     _webSocketModel!.sendJson({
       "msg": "/deletechatroom",
       "translate": isTranslateToggled,
       "chat_room_id": chatRoomId
     });
-    _startQuerying();
   }
 
   bool sendUserMessage({
@@ -103,6 +104,7 @@ class ChatModel {
     if (!ready) {
       return false;
     }
+    _startQuerying();
     addChatMessage(
       message: message,
       isGptSpeaking: false,
@@ -119,7 +121,6 @@ class ChatModel {
       "translate": isTranslateToggled,
       "chat_room_id": _chatRoomId
     });
-    _startQuerying();
     return true;
   }
 
@@ -128,6 +129,7 @@ class ChatModel {
     if (!ready) {
       return;
     }
+    _startQuerying();
 
     final String? lastUserMessage =
         lastChatMessageWhere((mm) => mm.isGptSpeaking == false)?.message.value;
@@ -140,7 +142,6 @@ class ChatModel {
       "translate": isTranslateToggled,
       "chat_room_id": _chatRoomId,
     });
-    _startQuerying();
   }
 
   void clearAllChat({required bool clearViewOnly}) {
@@ -314,5 +315,22 @@ class ChatModel {
 
   void _startQuerying() {
     _isQuerying = true;
+  }
+
+  Future<void> uploadFile({required String filename, Uint8List? file}) async {
+    _startQuerying();
+    addChatMessage(
+      message: "📄 **$filename**",
+      isGptSpeaking: false,
+      isFinished: true,
+    );
+    addChatMessage(
+      message: "",
+      isGptSpeaking: true,
+      isFinished: false,
+      isLoading: true,
+    );
+    _webSocketModel?.sendJson({"filename": filename});
+    _webSocketModel?.sendBytes(file);
   }
 }

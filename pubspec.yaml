@@ -28,6 +28,7 @@ dependencies:
   stream_channel: ^2.1.1
   flutter_highlighter: ^0.1.1
   google_fonts: ^4.0.3
+  file_picker: ^5.2.11
 
 dev_dependencies:
   flutter_test:

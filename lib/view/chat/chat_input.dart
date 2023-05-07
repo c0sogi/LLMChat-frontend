@@ -50,6 +50,11 @@ class BottomToolbar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
+        // Upload file button
+        IconButton(
+          onPressed: () => Get.find<ChatViewModel>().uploadFile(),
+          icon: const Icon(Icons.file_upload),
+        ),
         // Upload audio button
         IconButton(
           onPressed: () => Get.find<ChatViewModel>().uploadAudio(),

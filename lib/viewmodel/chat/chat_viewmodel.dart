@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
@@ -161,6 +162,17 @@ class ChatViewModel extends GetxController {
 
   void toggleTranslate() {
     _chatModel?.update((val) => val!.toggleTranslate());
+  }
+
+  Future<void> uploadFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      await _chatModel?.value.uploadFile(
+        filename: result.files.single.name,
+        file: result.files.single.bytes,
+      );
+      _chatModel?.update((val) {});
+    }
   }
 
   void uploadImage() {
