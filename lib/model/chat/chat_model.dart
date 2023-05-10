@@ -73,8 +73,8 @@ class ChatModel {
     if (!ready || _isQuerying || _chatRoomId == chatRoomId) {
       return;
     }
-    _startQuerying();
     clearAllChat(clearViewOnly: true);
+    _startQuerying();
     _chatRoomId = chatRoomId;
     _webSocketModel!.sendJson({
       "msg": "/echo You are now in chat room `$chatRoomId`",
@@ -232,7 +232,6 @@ class ChatModel {
 
   void _messageHandler(dynamic rawText) {
     final Map<String, dynamic> rcvd = jsonDecode(rawText);
-    // print("rcvd: $rcvd");
     _chatRoomId = rcvd["chat_room_id"];
     final bool isGptSpeaking = rcvd["is_user"] ? false : true;
     final String message = rcvd["msg"] ?? "";

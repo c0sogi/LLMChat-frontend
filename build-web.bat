@@ -1,0 +1,1 @@
+flutter build web --base-href /chatgpt/ --web-renderer canvaskit
