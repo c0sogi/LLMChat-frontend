@@ -134,9 +134,9 @@ class ChatViewModel extends GetxController {
   }
 
   void deleteChatRoom({required String chatRoomId}) {
-    _chatModel?.update((val) => val!.deleteChatRoom(
-          chatRoomId: chatRoomId,
-        ));
+    _chatModel?.update((val) {
+      val!.deleteChatRoom(chatRoomId: chatRoomId);
+    });
   }
 
   void sendMessage() {
@@ -155,7 +155,7 @@ class ChatViewModel extends GetxController {
   }
 
   void clearChat({required bool clearViewOnly}) {
-    _chatModel?.update((val) => val!.clearAllChat(
+    _chatModel?.update((val) => val!.clearChat(
           clearViewOnly: clearViewOnly,
         ));
   }

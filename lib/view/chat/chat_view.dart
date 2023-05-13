@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
@@ -47,10 +48,12 @@ class ChatView extends StatelessWidget {
                                       const EdgeInsets.only(left: 10, top: 10),
                                   child: Stack(
                                     children: [
-                                      const CircleAvatar(
+                                      CircleAvatar(
                                         radius: 20,
-                                        backgroundImage: AssetImage(
-                                          'assets/images/gpt_profile.png',
+                                        backgroundImage:
+                                            ChatImageModel.getLlmAssetImage(
+                                          chatViewModel
+                                              .messages![index].modelName.value,
                                         ),
                                       ),
                                       if (chatViewModel
@@ -92,9 +95,7 @@ class ChatView extends StatelessWidget {
                                   padding: EdgeInsets.only(right: 10, top: 10),
                                   child: CircleAvatar(
                                     radius: 20,
-                                    backgroundImage: AssetImage(
-                                      'assets/images/user_profile.png',
-                                    ),
+                                    backgroundImage: ChatImageModel.user,
                                   ),
                                 ),
                             ],

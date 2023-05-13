@@ -4,8 +4,9 @@ class MessageModel {
   RxString message;
   bool isFinished;
   bool isGptSpeaking;
-  RxBool isLoading;
+  final RxBool isLoading;
   final DateTime dateTime;
+  final RxString modelName;
 
   MessageModel({
     required String message,
@@ -13,7 +14,9 @@ class MessageModel {
     required this.isGptSpeaking,
     DateTime? datetime,
     bool? isLoading,
+    String? modelName,
   })  : message = message.obs,
         isLoading = (isLoading ?? false).obs,
-        dateTime = datetime ?? DateTime.now();
+        dateTime = datetime ?? DateTime.now(),
+        modelName = (modelName ?? "").obs;
 }

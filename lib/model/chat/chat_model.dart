@@ -17,6 +17,7 @@ class ChatModel {
   final RxList<String> _chatRoomIds;
 
   int get length => _messages.length;
+  String? get chatRoomId => _chatRoomId;
   List<MessageModel> get messages => _messages;
   bool get ready =>
       !_isQuerying && (_webSocketModel?.isConnected ?? false) && _isInitialized;
@@ -73,11 +74,9 @@ class ChatModel {
     if (!ready || _isQuerying || _chatRoomId == chatRoomId) {
       return;
     }
-    clearAllChat(clearViewOnly: true);
     _startQuerying();
-    _chatRoomId = chatRoomId;
     _webSocketModel!.sendJson({
-      "msg": "/echo You are now in chat room `$chatRoomId`",
+      "msg": "",
       "translate": isTranslateToggled,
       "chat_room_id": chatRoomId
     });
@@ -90,11 +89,10 @@ class ChatModel {
       return;
     }
     _startQuerying();
-    clearAllChat(clearViewOnly: true);
     _webSocketModel!.sendJson({
-      "msg": "/deletechatroom",
+      "msg": "/deletechatroom $chatRoomId",
       "translate": isTranslateToggled,
-      "chat_room_id": chatRoomId
+      "chat_room_id": _chatRoomId
     });
   }
 
@@ -144,7 +142,7 @@ class ChatModel {
     });
   }
 
-  void clearAllChat({required bool clearViewOnly}) {
+  void clearChat({required bool clearViewOnly}) {
     if (!ready) {
       return;
     }
@@ -180,6 +178,7 @@ class ChatModel {
     required bool isGptSpeaking,
     bool? isLoading,
     DateTime? datetime,
+    String? modelName,
   }) {
     _messages.add(MessageModel(
       message: message,
@@ -187,6 +186,7 @@ class ChatModel {
       isGptSpeaking: isGptSpeaking,
       isLoading: isLoading,
       datetime: datetime,
+      modelName: modelName,
     ));
   }
 
@@ -232,44 +232,60 @@ class ChatModel {
 
   void _messageHandler(dynamic rawText) {
     final Map<String, dynamic> rcvd = jsonDecode(rawText);
-    _chatRoomId = rcvd["chat_room_id"];
+    if (rcvd["chat_room_id"] != null && rcvd["chat_room_id"] != _chatRoomId) {
+      _chatRoomId = rcvd["chat_room_id"];
+      messages.clear();
+      addChatMessage(
+          message: "You are now in chat room $_chatRoomId",
+          isFinished: true,
+          isGptSpeaking: true);
+    }
     final bool isGptSpeaking = rcvd["is_user"] ? false : true;
-    final String message = rcvd["msg"] ?? "";
+    final String? message = rcvd["msg"];
     final bool isFinished = rcvd["finish"] ?? false;
     final bool init = rcvd["init"] ?? false;
-    if (init) {
+    final String? modelName = rcvd["model_name"];
+    if (init && message != null) {
       // message is list of messages in format of JSON, so we need to parse it
       final Map<String, dynamic> initMsg = jsonDecode(message);
-      final List<String> allChatRoomIds =
-          List<String>.from(initMsg["chat_room_ids"]);
-      _chatRoomIds.assignAll(allChatRoomIds);
-      final List<Map<String, dynamic>> previousChats =
-          List<Map<String, dynamic>>.from(initMsg["previous_chats"]);
-      for (final Map<String, dynamic> msg in previousChats) {
-        addChatMessage(
-          message: msg["content"] ?? "",
-          isGptSpeaking: msg["is_user"] ?? false ? false : true,
-          isFinished: true,
-          datetime: parseFromTimestamp(msg["timestamp"]),
-        );
+      if (initMsg["chat_room_ids"] != null) {
+        final List<String> allChatRoomIds =
+            List<String>.from(initMsg["chat_room_ids"]);
+        _chatRoomIds.assignAll(allChatRoomIds);
+      }
+      if (initMsg["previous_chats"] != null) {
+        final List<Map<String, dynamic>> previousChats =
+            List<Map<String, dynamic>>.from(initMsg["previous_chats"]);
+        for (final Map<String, dynamic> msg in previousChats) {
+          addChatMessage(
+            message: msg["content"] ?? "",
+            isGptSpeaking: msg["is_user"] ?? false ? false : true,
+            isFinished: true,
+            datetime: parseFromTimestamp(msg["timestamp"]),
+            modelName: msg["model_name"],
+          );
+        }
       }
       _isInitialized = true;
       _onMessageComplete();
       return;
     }
-    isTalking
-        ? _onMessageAppend(appendMessage: message)
-        : _onMessageCreate(
-            message: message,
-            isFinished: isFinished,
-            isGptSpeaking: isGptSpeaking,
-          );
+    message != null
+        ? isTalking
+            ? _onMessageAppend(appendMessage: message, modelName: modelName)
+            : _onMessageCreate(
+                message: message,
+                isFinished: isFinished,
+                isGptSpeaking: isGptSpeaking,
+                modelName: modelName,
+              )
+        : _onNullMessage(modelName: modelName);
     if (isFinished) {
       _onMessageComplete();
     }
   }
 
-  void _onMessageAppend({required String appendMessage}) {
+  void _onMessageAppend({required String appendMessage, String? modelName}) {
     final int index = _messages.lastIndexWhere((mm) => mm.isFinished == false);
     if (index != -1) {
       _messages[index].message(_messages[index].message.value + appendMessage);
@@ -279,6 +295,7 @@ class ChatModel {
       message: appendMessage,
       isGptSpeaking: true,
       isFinished: false,
+      modelName: modelName,
     );
   }
 
@@ -286,6 +303,7 @@ class ChatModel {
     required String message,
     required bool isFinished,
     required bool isGptSpeaking,
+    String? modelName,
   }) {
     final int index =
         _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
@@ -294,6 +312,7 @@ class ChatModel {
         message: message,
         isFinished: isFinished,
         isGptSpeaking: isGptSpeaking,
+        modelName: modelName,
       );
       isTalking = true;
       return;
@@ -304,6 +323,15 @@ class ChatModel {
       ..message(message)
       ..isLoading(false);
     isTalking = true;
+  }
+
+  void _onNullMessage({
+    String? modelName,
+  }) {
+    if (modelName != null) {
+      _messages[_messages.lastIndexWhere((mm) => mm.isLoading.value == true)]
+          .modelName(modelName);
+    }
   }
 
   void _onMessageComplete() {

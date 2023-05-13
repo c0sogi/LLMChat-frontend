@@ -30,13 +30,4 @@ class ThemeViewModel extends GetxController {
     }
     update();
   }
-
-  void toggleTherme(bool night) {
-    if (night) {
-      stops.assignAll([0.0, 0.33, 0.66, 0.8, 0.95, 0.98, 0.99, 1.0]);
-    } else {
-      stops.assignAll([0.0, 0.05, 0.1, 0.3, 0.4, 0.6, 0.8, 1.0]);
-    }
-    update();
-  }
 }
