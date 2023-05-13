@@ -134,7 +134,12 @@ class ChatModel {
     if (lastUserMessage == null) {
       return;
     }
-
+    addChatMessage(
+      message: "",
+      isGptSpeaking: true,
+      isFinished: false,
+      isLoading: true,
+    );
     _webSocketModel!.sendJson({
       "msg": "/retry",
       "translate": isTranslateToggled,
@@ -232,13 +237,15 @@ class ChatModel {
 
   void _messageHandler(dynamic rawText) {
     final Map<String, dynamic> rcvd = jsonDecode(rawText);
+    // print(rcvd);
     if (rcvd["chat_room_id"] != null && rcvd["chat_room_id"] != _chatRoomId) {
       _chatRoomId = rcvd["chat_room_id"];
       messages.clear();
       addChatMessage(
-          message: "You are now in chat room $_chatRoomId",
-          isFinished: true,
-          isGptSpeaking: true);
+        message: "You are now in chat room $_chatRoomId",
+        isFinished: true,
+        isGptSpeaking: true,
+      );
     }
     final bool isGptSpeaking = rcvd["is_user"] ? false : true;
     final String? message = rcvd["msg"];
@@ -307,6 +314,7 @@ class ChatModel {
   }) {
     final int index =
         _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
+    // print("_onMessageCreate: $index");
     if (index == -1) {
       addChatMessage(
         message: message,
@@ -321,7 +329,8 @@ class ChatModel {
       ..isGptSpeaking = isGptSpeaking
       ..isFinished = isFinished
       ..message(message)
-      ..isLoading(false);
+      ..isLoading(false)
+      ..modelName(modelName);
     isTalking = true;
   }
 
@@ -329,8 +338,21 @@ class ChatModel {
     String? modelName,
   }) {
     if (modelName != null) {
-      _messages[_messages.lastIndexWhere((mm) => mm.isLoading.value == true)]
-          .modelName(modelName);
+      final int index =
+          _messages.lastIndexWhere((mm) => mm.isLoading.value == true);
+      if (index != -1) {
+        _messages[index].modelName(modelName);
+        return;
+      }
+    }
+    if (!isTalking) {
+      addChatMessage(
+        message: "",
+        isFinished: false,
+        isGptSpeaking: true,
+        isLoading: true,
+        modelName: modelName,
+      );
     }
   }
 
