@@ -14,17 +14,19 @@ class ChatInput extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                TextField(
-                  autofocus: true,
-                  focusNode: Get.find<ChatViewModel>().messageFocusNode,
-                  maxLines: 3,
-                  minLines: 3,
-                  textAlignVertical: TextAlignVertical.center,
-                  controller: Get.find<ChatViewModel>().messageController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter message here...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                RepaintBoundary(
+                  child: TextFormField(
+                    autofocus: true,
+                    focusNode: Get.find<ChatViewModel>().messageFocusNode,
+                    maxLines: 20,
+                    minLines: 1,
+                    textAlignVertical: TextAlignVertical.center,
+                    controller: Get.find<ChatViewModel>().messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter message here...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),

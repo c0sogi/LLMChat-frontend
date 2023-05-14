@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
@@ -285,17 +286,79 @@ class LoginHeader extends StatelessWidget {
             ? ThemeViewModel.idleColor
             : ThemeViewModel.activeColor,
         elevation: 5,
-        child: ListTile(
-          title: Text(
-            "Welcome ${loginViewModel.username}!",
-            style: const TextStyle(color: Colors.white),
-          ),
-          subtitle: const Text(
-            "Logout",
-            textAlign: TextAlign.end,
-            style: TextStyle(color: Colors.white70),
-          ),
-          onTap: loginViewModel.logout,
+        child: Column(
+          // Column 위젯으로 변경하여 위젯들을 세로로 배치합니다.
+          mainAxisAlignment: MainAxisAlignment.center, // 위젯들의 간격을 균등하게 합니다.
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(right: 10, top: 10),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundImage: ChatImageModel.user,
+                  ),
+                ),
+                Column(
+                  children: [
+                    const Text(
+                      "Welcome",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(loginViewModel.username),
+                  ],
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                // Logout과 Unregister 버튼을 Row 위젯으로 표시합니다.
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceAround, // 버튼들의 간격을 균등하게 합니다.
+                children: [
+                  Column(
+                    children: [
+                      IconButton(
+                        // Unregister 버튼을 ElevatedButton 위젯으로 표시합니다.
+                        onPressed: loginViewModel
+                            .unregister, // 버튼을 누르면 loginViewModel.unregister 함수를 호출합니다.
+                        icon: const Icon(Icons.delete_sweep_rounded),
+                      ),
+                      const Text(
+                        "Unregister",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      IconButton(
+                        // Unregister 버튼을 ElevatedButton 위젯으로 표시합니다.
+                        onPressed: loginViewModel
+                            .logout, // 버튼을 누르면 loginViewModel.unregister 함수를 호출합니다.
+                        icon: const Icon(Icons.logout_rounded),
+                      ),
+                      const Text(
+                        "Logout",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

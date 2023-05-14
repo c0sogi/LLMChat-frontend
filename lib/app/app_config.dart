@@ -7,6 +7,7 @@ class Config {
   static const String httpUrl = "$httpSchema://$host";
   static const String loginUrl = "$httpUrl/api/auth/login/email";
   static const String registerUrl = "$httpUrl/api/auth/register/email";
+  static const String unregisterUrl = "$httpUrl/api/auth/register";
   static const String fetchApiKeysUrl = "$httpUrl/api/user/apikeys";
   static const String fetchUserInfoUrl = "$httpUrl/api/user/me";
   static const String postApiKeysUrl = "$httpUrl/api/user/apikeys";

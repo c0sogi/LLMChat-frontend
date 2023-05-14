@@ -60,18 +60,33 @@ class LoginViewModel extends GetxController {
     });
   }
 
+  Future<void> unregister() async {
+    final SnackBarModel snackbar = await _loginModel.value.unregister();
+    _loginModel.update((_) {
+      Get.snackbar(
+        snackbar.title,
+        snackbar.message,
+        duration: snackbar.duration,
+        backgroundColor: snackbar.backgroundColor,
+        snackPosition: snackbar.snackPosition,
+        icon: snackbar.icon,
+      );
+    });
+  }
+
   Future<void> login(String email, String password) async {
     final SnackBarModel snackbar =
         await _loginModel.value.login(email, password);
-    Get.snackbar(
-      snackbar.title,
-      snackbar.message,
-      duration: snackbar.duration,
-      backgroundColor: snackbar.backgroundColor,
-      snackPosition: snackbar.snackPosition,
-      icon: snackbar.icon,
-    );
-    _loginModel.update((_) {});
+    _loginModel.update((_) {
+      Get.snackbar(
+        snackbar.title,
+        snackbar.message,
+        duration: snackbar.duration,
+        backgroundColor: snackbar.backgroundColor,
+        snackPosition: snackbar.snackPosition,
+        icon: snackbar.icon,
+      );
+    });
   }
 
   Future<void> logout() async {

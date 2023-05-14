@@ -186,6 +186,28 @@ class LoginModel {
           );
   }
 
+  Future<SnackBarModel> unregister() async {
+    final String? fetchResult = await JsonFetchUtils.fetch(
+      fetchMethod: FetchMethod.delete,
+      authorization: _jwtToken,
+      url: Config.unregisterUrl,
+      successCode: 204,
+      messageOnFail: "Failed to unregister",
+      onSuccess: (dynamic body) async {
+        await logout();
+      },
+    );
+    return fetchResult == null
+        ? SuccessSnackBarModel(
+            title: "Successfully unregistered",
+            message: "성공적으로 회원탈퇴 되었습니다.",
+          )
+        : ErrorSnackBarModel(
+            title: "Error",
+            message: fetchResult,
+          );
+  }
+
   Future<SnackBarModel> login(String email, String password) async {
     final response = await http.post(
       Uri.parse(Config.loginUrl),
