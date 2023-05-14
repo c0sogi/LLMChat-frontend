@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 import '../../app/app_config.dart';
 import '../../model/login/login_storage_model.dart';
@@ -126,6 +123,11 @@ class LoginModel {
         onSuccess: (dynamic body) async {
           _apiKeys.assignAll(body);
         },
+        onFail: (dynamic bodyDecoded) async {
+          if (bodyDecoded is Map && bodyDecoded["detail"] == "Token Expired") {
+            throw "Token expired. Please login again.";
+          }
+        },
       ),
       JsonFetchUtils.fetch(
           fetchMethod: FetchMethod.get,
@@ -151,39 +153,40 @@ class LoginModel {
   }
 
   Future<SnackBarModel> register(String email, String password) async {
-    final response = await http.post(
-      Uri.parse(Config.registerUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({'email': email, 'password': password}),
-    );
-    final String? fetchResult = await JsonFetchUtils.getFetchResult<String?>(
-      body: response.body,
-      statusCode: response.statusCode,
-      successCode: 201,
-      messageOnSuccess: null,
-      messageOnFail: "Failed to register.",
-      messageOnTokenExpired: "Token expired. Please login again.",
-      onSuccess: (dynamic body) async {
-        final String? errorMessages = await onGetToken(
-          jsonDecode(response.body)['Authorization'],
-        );
-        if (errorMessages != null) {
-          throw errorMessages;
-        }
-      },
-    );
-    return fetchResult == null
-        ? SuccessSnackBarModel(
-            title: "Successfully registered",
-            message: "성공적으로 회원가입 되었습니다.",
-          )
-        : ErrorSnackBarModel(
-            title: "Error",
-            message: fetchResult,
+    try {
+      final String? fetchResult = await JsonFetchUtils.fetch(
+        fetchMethod: FetchMethod.post,
+        url: Config.registerUrl,
+        successCode: 201,
+        body: {'email': email, 'password': password},
+        messageOnFail: "Failed to unregister",
+        onSuccess: (dynamic bodyDecoded) async {
+          final String? errorMessages = await onGetToken(
+            bodyDecoded['Authorization'],
           );
+          if (errorMessages != null) {
+            throw errorMessages;
+          }
+        },
+        onFail: (dynamic bodyDecoded) async {
+          throw bodyDecoded['detail'];
+        },
+      );
+      return fetchResult == null
+          ? SuccessSnackBarModel(
+              title: "Successfully registered",
+              message: "성공적으로 회원가입 되었습니다.",
+            )
+          : ErrorSnackBarModel(
+              title: "Error",
+              message: fetchResult,
+            );
+    } catch (e) {
+      return ErrorSnackBarModel(
+        title: "Error",
+        message: e.toString(),
+      );
+    }
   }
 
   Future<SnackBarModel> unregister() async {
@@ -209,39 +212,40 @@ class LoginModel {
   }
 
   Future<SnackBarModel> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse(Config.loginUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({'email': email, 'password': password}),
-    );
-    final String? fetchResult = await JsonFetchUtils.getFetchResult<String?>(
-      body: response.body,
-      statusCode: response.statusCode,
-      successCode: 200,
-      messageOnSuccess: null,
-      messageOnFail: "Failed to login.",
-      messageOnTokenExpired: "Token expired. Please login again.",
-      onSuccess: (dynamic body) async {
-        final String? errorMessages = await onGetToken(
-          jsonDecode(response.body)['Authorization'],
-        );
-        if (errorMessages != null) {
-          throw errorMessages;
-        }
-      },
-    );
-    return fetchResult == null
-        ? SuccessSnackBarModel(
-            title: "Successfully logged in",
-            message: "성공적으로 로그인 되었습니다.",
-          )
-        : ErrorSnackBarModel(
-            title: "Error",
-            message: fetchResult,
+    try {
+      final String? fetchResult = await JsonFetchUtils.fetch(
+        fetchMethod: FetchMethod.post,
+        url: Config.loginUrl,
+        successCode: 200,
+        body: {'email': email, 'password': password},
+        messageOnFail: "Failed to unregister",
+        onSuccess: (dynamic bodyDecoded) async {
+          final String? errorMessages = await onGetToken(
+            bodyDecoded['Authorization'],
           );
+          if (errorMessages != null) {
+            throw errorMessages;
+          }
+        },
+        onFail: (dynamic bodyDecoded) async {
+          throw bodyDecoded['detail'];
+        },
+      );
+      return fetchResult == null
+          ? SuccessSnackBarModel(
+              title: "Successfully logged in",
+              message: "성공적으로 로그인 되었습니다.",
+            )
+          : ErrorSnackBarModel(
+              title: "Error",
+              message: fetchResult,
+            );
+    } catch (e) {
+      return ErrorSnackBarModel(
+        title: "Error",
+        message: e.toString(),
+      );
+    }
   }
 
   Future<void> logout() async {

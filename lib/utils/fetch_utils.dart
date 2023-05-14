@@ -50,7 +50,6 @@ class JsonFetchUtils {
       successCode: successCode,
       messageOnSuccess: null,
       messageOnFail: messageOnFail,
-      messageOnTokenExpired: "토큰이 만료되었습니다. 다시 로그인해주세요.",
       onSuccess: onSuccess,
       onFail: onFail,
     );
@@ -62,11 +61,9 @@ class JsonFetchUtils {
     required int successCode,
     required T messageOnSuccess,
     required T messageOnFail,
-    required T messageOnTokenExpired,
     Future<void> Function(dynamic)? onSuccess,
     Future<void> Function(dynamic)? onFail,
   }) async {
-    bool isFailCallbackCalled = false;
     dynamic bodyDecoded;
 
     try {
@@ -80,17 +77,9 @@ class JsonFetchUtils {
         await onSuccess?.call(bodyDecoded);
         return messageOnSuccess;
       }
-      await onFail?.call(body);
-      isFailCallbackCalled = true;
-      if (bodyDecoded is Map && bodyDecoded["detail"] == "Token Expired") {
-        return messageOnTokenExpired;
-      }
       await onFail?.call(bodyDecoded) as T;
       return messageOnFail;
     } catch (e) {
-      if (!isFailCallbackCalled) {
-        await onFail?.call(body);
-      }
       return e is T ? e as T : messageOnFail;
     }
   }
