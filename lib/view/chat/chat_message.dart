@@ -72,55 +72,44 @@ class ChatMessage extends StatelessWidget {
     final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
     final bool isGptSpeaking = chatViewModel.messages![index].isGptSpeaking;
 
-    return GestureDetector(
-      onLongPress: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Copied to clipboard'),
-          ),
-        );
-        Clipboard.setData(
-            ClipboardData(text: chatViewModel.messages![index].message.value));
-      },
+    return Container(
+      alignment: isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
-        alignment: isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.7,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isGptSpeaking ? Colors.grey[600] : Colors.blue[600],
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(12),
-              topRight: const Radius.circular(12),
-              bottomLeft: isGptSpeaking
-                  ? const Radius.circular(0)
-                  : const Radius.circular(12),
-              bottomRight: isGptSpeaking
-                  ? const Radius.circular(12)
-                  : const Radius.circular(0),
-            ),
-          ),
-          child: Obx(() {
-            SchedulerBinding.instance
-                .addPostFrameCallback(chatViewModel.scrollToBottomCallback);
-            if (chatViewModel.messages![index].isLoading.value) {
-              return Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.3,
-                ),
-                child: const Center(
-                  child: LinearProgressIndicator(),
-                ),
-              );
-            }
-            return MarkdownWidget(
-              text: chatViewModel.messages![index].message.value,
-            );
-          }),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isGptSpeaking ? Colors.grey[600] : Colors.blue[600],
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(12),
+            topRight: const Radius.circular(12),
+            bottomLeft: isGptSpeaking
+                ? const Radius.circular(0)
+                : const Radius.circular(12),
+            bottomRight: isGptSpeaking
+                ? const Radius.circular(12)
+                : const Radius.circular(0),
+          ),
+        ),
+        child: Obx(() {
+          SchedulerBinding.instance
+              .addPostFrameCallback(chatViewModel.scrollToBottomCallback);
+          if (chatViewModel.messages![index].isLoading.value) {
+            return Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.3,
+              ),
+              child: const Center(
+                child: LinearProgressIndicator(),
+              ),
+            );
+          }
+          return MarkdownWidget(
+            text: chatViewModel.messages![index].message.value,
+          );
+        }),
       ),
     );
   }
@@ -309,8 +298,8 @@ class CodeblockHeader extends StatelessWidget {
                     );
                     Clipboard.setData(ClipboardData(text: text.textContent));
                   },
-                  child:
-                      const Text('복사', style: TextStyle(color: Colors.white))),
+                  child: const Text('Copy',
+                      style: TextStyle(color: Colors.white))),
             ],
           ),
         ],

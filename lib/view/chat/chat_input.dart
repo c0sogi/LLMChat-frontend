@@ -56,20 +56,25 @@ class BottomToolbar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Upload file button
-          FilledButton(
-            style: ElevatedButton.styleFrom(
-              surfaceTintColor: ThemeViewModel.idleColor,
-              backgroundColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          Tooltip(
+            message: "'Upload PDF, TXT, or other text-included file to embed'",
+            waitDuration: const Duration(milliseconds: 500),
+            showDuration: const Duration(milliseconds: 0),
+            child: FilledButton(
+              style: ElevatedButton.styleFrom(
+                surfaceTintColor: ThemeViewModel.idleColor,
+                backgroundColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
+              onPressed: () => Get.find<ChatViewModel>().uploadFile(),
+              child: Row(children: const [
+                Icon(Icons.document_scanner),
+                SizedBox(width: 8),
+                Text('Embed document'),
+              ]),
             ),
-            onPressed: () => Get.find<ChatViewModel>().uploadFile(),
-            child: Row(children: const [
-              Icon(Icons.document_scanner),
-              SizedBox(width: 8),
-              Text('Embed document'),
-            ]),
           ),
           // Upload audio button
           // IconButton(
@@ -109,21 +114,47 @@ class MessageButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        IconButton(
-          onPressed: () =>
-              Get.find<ChatViewModel>().clearChat(clearViewOnly: false),
-          icon: const Icon(Icons.clear_all),
+        Tooltip(
+          message: "Clear chat",
+          showDuration: const Duration(milliseconds: 0),
+          waitDuration: const Duration(milliseconds: 500),
+          child: IconButton(
+            onPressed: () => chatViewModel.clearChat(clearViewOnly: false),
+            icon: const Icon(Icons.clear_all),
+          ),
         ),
-        IconButton(
-          onPressed: () => Get.find<ChatViewModel>().resendMessage(),
-          icon: const Icon(Icons.refresh),
+        Tooltip(
+          message: "Resend message",
+          showDuration: const Duration(milliseconds: 0),
+          waitDuration: const Duration(milliseconds: 500),
+          child: IconButton(
+            onPressed: () => chatViewModel.resendMessage(),
+            icon: const Icon(Icons.refresh),
+          ),
         ),
-        IconButton(
-          onPressed: () => Get.find<ChatViewModel>().sendMessage(),
-          icon: const Icon(Icons.send),
+        Obx(
+          () => chatViewModel.isQuerying
+              ? Tooltip(
+                  message: "Stop query",
+                  showDuration: const Duration(milliseconds: 0),
+                  child: IconButton(
+                    onPressed: () => chatViewModel.sendText("stop"),
+                    icon: const Icon(Icons.stop),
+                  ),
+                )
+              : Tooltip(
+                  message: "Send message",
+                  showDuration: const Duration(milliseconds: 0),
+                  waitDuration: const Duration(milliseconds: 500),
+                  child: IconButton(
+                    onPressed: chatViewModel.sendMessage,
+                    icon: const Icon(Icons.send),
+                  ),
+                ),
         ),
       ],
     );

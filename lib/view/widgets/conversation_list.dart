@@ -3,6 +3,7 @@ import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:flutter_web/viewmodel/login/login_viewmodel.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class ConversationList extends StatelessWidget {
@@ -18,9 +19,15 @@ class ConversationList extends StatelessWidget {
         Obx(
           () => ListView.builder(
             shrinkWrap: true,
-            itemCount: chatViewModel.chatRoomIds.length,
+            itemCount: chatViewModel.chatRooms.length,
             itemBuilder: (context, index) {
-              final String chatRoomId = chatViewModel.chatRoomIds[index];
+              final chatRoom = chatViewModel.chatRooms[index];
+              try {
+                chatRoom.chatRoomName(DateFormat('yyyy-MM-dd hh:mm a').format(
+                    DateTime.parse(chatRoom.chatRoomName.value).toLocal()));
+              } catch (_) {
+                // do nothing
+              }
               return ListTile(
                 title: Row(
                   children: [
@@ -31,35 +38,47 @@ class ConversationList extends StatelessWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Chat",
-                              style: TextStyle(
-                                color: ThemeViewModel.idleColor,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                            Text(chatRoomId.toUpperCase().substring(
-                                  0,
-                                  chatRoomId.length > 6 ? 6 : chatRoomId.length,
-                                ))
-                          ],
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Obx(
+                          () => chatRoom.isChatRoomNameEditing.value
+                              ? TextFormField(
+                                  initialValue: chatRoom.chatRoomName.value,
+                                  autofocus: true,
+                                  maxLength: 20,
+                                  onFieldSubmitted: (chatRoomName) {
+                                    chatRoom.isChatRoomNameEditing.value =
+                                        false;
+                                    chatRoom.chatRoomName.value = chatRoomName;
+                                    chatViewModel.sendJson(
+                                        {"chat_room_name": chatRoomName});
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter chat room name here...',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  chatRoom.chatRoomName.value,
+                                  overflow: TextOverflow.fade,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                ),
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => chatViewModel.deleteChatRoom(
-                          chatRoomId: chatViewModel.chatRoomIds[index],
-                        ),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => chatRoom.isChatRoomNameEditing(
+                        !chatRoom.isChatRoomNameEditing.value,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete,
+                          color: ThemeViewModel.idleColor),
+                      onPressed: () => chatViewModel.deleteChatRoom(
+                        chatRoomId: chatRoom.chatRoomId,
                       ),
                     ),
                   ],
@@ -77,7 +96,7 @@ class ConversationList extends StatelessWidget {
                     return;
                   }
                   chatViewModel.changeChatRoom(
-                    chatRoomId: chatViewModel.chatRoomIds[index],
+                    chatRoomId: chatViewModel.chatRooms[index].chatRoomId,
                   );
                   loginViewModel.scaffoldKey.currentState!.closeDrawer();
                 },

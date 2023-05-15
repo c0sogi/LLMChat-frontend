@@ -260,12 +260,11 @@ class ApiKeysList extends StatelessWidget {
             ),
             child: ListTile(
               leading: const Icon(Icons.vpn_key),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               title: Text(apiKey['user_memo']),
               subtitle: Text(
-                DateFormat('yyyy-MM-dd hh:mm a')
-                    .format(DateTime.parse(apiKey['created_at'])),
+                DateFormat('yyyy-MM-dd hh:mm a').format(
+                  DateTime.parse(apiKey['created_at'] + "Z").toLocal(),
+                ),
               ),
               onTap: () async => await loginViewModel.onClickApiKey(
                 accessKey: apiKey['access_key'],

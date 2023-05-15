@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
@@ -35,6 +38,9 @@ class ChatView extends StatelessWidget {
                         controller: chatViewModel.scrollController,
                         itemCount: chatViewModel.length,
                         itemBuilder: (context, index) {
+                          if (index >= chatViewModel.messages!.length) {
+                            return const SizedBox();
+                          }
                           return Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment:
@@ -46,28 +52,30 @@ class ChatView extends StatelessWidget {
                                 Padding(
                                   padding:
                                       const EdgeInsets.only(left: 10, top: 10),
-                                  child: Stack(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 20,
-                                        backgroundImage:
-                                            ChatImageModel.getLlmAssetImage(
-                                          chatViewModel
-                                              .messages![index].modelName.value,
-                                        ),
-                                      ),
-                                      if (chatViewModel
-                                          .messages![index].isLoading.value)
-                                        const Positioned.fill(
-                                          child: CircularProgressIndicator(
-                                            // backgroundColor: Colors.transparent,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              Colors.blue,
-                                            ),
+                                  child: Obx(
+                                    () => Stack(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 20,
+                                          backgroundImage:
+                                              ChatImageModel.getLlmAssetImage(
+                                            chatViewModel.messages![index]
+                                                .modelName.value,
                                           ),
                                         ),
-                                    ],
+                                        if (chatViewModel
+                                            .messages![index].isLoading.value)
+                                          const Positioned.fill(
+                                            child: CircularProgressIndicator(
+                                              // backgroundColor: Colors.transparent,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                Colors.blue,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               Column(
@@ -79,14 +87,38 @@ class ChatView extends StatelessWidget {
                                   ChatMessage(
                                     index: index,
                                   ),
-                                  Text(
-                                    DateFormat('MMM d, yyyy, h:mm a').format(
-                                        chatViewModel
-                                            .messages![index].dateTime),
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey,
-                                    ),
+                                  Row(
+                                    children: [
+                                      if (!chatViewModel
+                                          .messages![index].isGptSpeaking)
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8.0),
+                                          child: CopyToClipboardButton(
+                                            index: index,
+                                            isGptSpeaking: false,
+                                          ),
+                                        ),
+                                      Text(
+                                        DateFormat('MMM d, yyyy, h:mm a')
+                                            .format(chatViewModel
+                                                .messages![index].dateTime),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      if (chatViewModel
+                                          .messages![index].isGptSpeaking)
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8.0),
+                                          child: CopyToClipboardButton(
+                                            index: index,
+                                            isGptSpeaking: true,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -116,5 +148,66 @@ class ChatView extends StatelessWidget {
         ),
       );
     });
+  }
+}
+
+class CopyToClipboardButton extends StatelessWidget {
+  final int index;
+  final RxBool isCheckMarkVisible = false.obs;
+  final bool isGptSpeaking;
+
+  CopyToClipboardButton(
+      {super.key, required this.index, required this.isGptSpeaking});
+  void copyToClipboard() async {
+    await Clipboard.setData(ClipboardData(
+        text: Get.find<ChatViewModel>().messages![index].message.value));
+    isCheckMarkVisible.value = true;
+    await Future.delayed(const Duration(seconds: 1));
+    isCheckMarkVisible.value = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isCheckMarkVisible.value ? null : copyToClipboard,
+      child: Obx(() {
+        return Row(
+          children: [
+            if (!isGptSpeaking)
+              Text(
+                isCheckMarkVisible.value ? "Copied!" : "Copy to clipboard",
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: isCheckMarkVisible.value
+                  ? Icon(
+                      Icons.check_circle,
+                      key: UniqueKey(),
+                      color: Colors.green,
+                      size: 18,
+                    )
+                  : Icon(
+                      Icons.content_copy,
+                      key: UniqueKey(),
+                      color: Colors.grey,
+                      size: 18,
+                    ),
+            ),
+            if (isGptSpeaking)
+              Text(
+                isCheckMarkVisible.value ? "Copied!" : "Copy to clipboard",
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+          ],
+        );
+      }),
+    );
   }
 }

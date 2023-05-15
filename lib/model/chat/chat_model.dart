@@ -4,29 +4,35 @@ import 'package:flutter_web/model/chat/websocket_model.dart';
 import 'package:get/get.dart';
 import '../../app/app_config.dart';
 import '../../model/message/message_model.dart';
+import '../../viewmodel/chat/chat_viewmodel.dart';
 
 class ChatModel {
   bool isTranslateToggled = false;
   bool isTalking = false;
-  bool _isQuerying = false;
   bool _isInitialized = false;
   WebSocketModel? _webSocketModel;
   String? _chatRoomId;
+  final RxBool _isQuerying = false.obs;
   final List<MessageModel> _messages = <MessageModel>[];
   final void Function(dynamic) _updateViewCallback;
-  final RxList<String> _chatRoomIds;
+  final RxList<ChatRoomModel> _chatRooms;
+  final RxInt lengthOfMessages;
 
   int get length => _messages.length;
   String? get chatRoomId => _chatRoomId;
   List<MessageModel> get messages => _messages;
+  bool get isQuerying => _isQuerying.value;
   bool get ready =>
-      !_isQuerying && (_webSocketModel?.isConnected ?? false) && _isInitialized;
+      !_isQuerying.value &&
+      (_webSocketModel?.isConnected ?? false) &&
+      _isInitialized;
 
   ChatModel({
     required void Function(dynamic) updateViewCallback,
-    required RxList<String> chatRoomIds,
+    required RxList<ChatRoomModel> chatRooms,
+    required this.lengthOfMessages,
   })  : _updateViewCallback = updateViewCallback,
-        _chatRoomIds = chatRoomIds;
+        _chatRooms = chatRooms;
 
   Future<void> beginChat(String apiKey) async {
     // print("beginning chat");
@@ -68,10 +74,8 @@ class ChatModel {
     isTranslateToggled = !isTranslateToggled;
   }
 
-  void changeChatRoom({
-    required String chatRoomId,
-  }) {
-    if (!ready || _isQuerying || _chatRoomId == chatRoomId) {
+  void changeChatRoom({required String chatRoomId}) {
+    if (!ready || _chatRoomId == chatRoomId) {
       return;
     }
     _startQuerying();
@@ -82,9 +86,7 @@ class ChatModel {
     });
   }
 
-  void deleteChatRoom({
-    required String chatRoomId,
-  }) {
+  void deleteChatRoom({required String chatRoomId}) {
     if (!ready) {
       return;
     }
@@ -96,9 +98,7 @@ class ChatModel {
     });
   }
 
-  bool sendUserMessage({
-    required String message,
-  }) {
+  bool sendUserMessage({required String message}) {
     if (!ready) {
       return false;
     }
@@ -120,6 +120,14 @@ class ChatModel {
       "chat_room_id": _chatRoomId
     });
     return true;
+  }
+
+  void sendText(String text) {
+    _webSocketModel?.sendText(text);
+  }
+
+  void sendJson(Map<String, dynamic> json) {
+    _webSocketModel?.sendJson(json);
   }
 
   void resendUserMessage() {
@@ -153,6 +161,7 @@ class ChatModel {
     }
 
     _messages.clear();
+    lengthOfMessages(0);
     if (clearViewOnly) {
       return;
     }
@@ -193,23 +202,7 @@ class ChatModel {
       datetime: datetime,
       modelName: modelName,
     ));
-  }
-
-  void popChatMessage() {
-    if (_messages.isNotEmpty) {
-      _messages.removeLast();
-    }
-  }
-
-  void popChatMessageWhere(bool Function(MessageModel) test) {
-    _messages.removeWhere(test);
-  }
-
-  void popLastChatMessageWhere(bool Function(MessageModel) test) {
-    final int index = _messages.lastIndexWhere(test);
-    if (index != -1) {
-      _messages.removeAt(index);
-    }
+    lengthOfMessages(lengthOfMessages.value + 1);
   }
 
   void appendToLastChatMessageWhere(
@@ -241,8 +234,9 @@ class ChatModel {
     if (rcvd["chat_room_id"] != null && rcvd["chat_room_id"] != _chatRoomId) {
       _chatRoomId = rcvd["chat_room_id"];
       messages.clear();
+      lengthOfMessages(0);
       addChatMessage(
-        message: "You are now in chat room $_chatRoomId",
+        message: "You are now in chat `$_chatRoomId`",
         isFinished: true,
         isGptSpeaking: true,
       );
@@ -255,15 +249,20 @@ class ChatModel {
     if (init && message != null) {
       // message is list of messages in format of JSON, so we need to parse it
       final Map<String, dynamic> initMsg = jsonDecode(message);
-      if (initMsg["chat_room_ids"] != null) {
-        final List<String> allChatRoomIds =
-            List<String>.from(initMsg["chat_room_ids"]);
-        _chatRoomIds.assignAll(allChatRoomIds);
+      if (initMsg["chat_rooms"] != null) {
+        List<Map<String, dynamic>>.from(initMsg["chat_rooms"]);
+        _chatRooms.assignAll(
+          List<Map<String, dynamic>>.from(initMsg["chat_rooms"]).map(
+            (e) => ChatRoomModel(
+              chatRoomId: e["chat_room_id"]!,
+              chatRoomName: e["chat_room_name"],
+            ),
+          ),
+        );
       }
       if (initMsg["previous_chats"] != null) {
-        final List<Map<String, dynamic>> previousChats =
-            List<Map<String, dynamic>>.from(initMsg["previous_chats"]);
-        for (final Map<String, dynamic> msg in previousChats) {
+        for (final Map<String, dynamic> msg
+            in List<Map<String, dynamic>>.from(initMsg["previous_chats"])) {
           addChatMessage(
             message: msg["content"] ?? "",
             isGptSpeaking: msg["is_user"] ?? false ? false : true,
@@ -273,8 +272,10 @@ class ChatModel {
           );
         }
       }
-      _isInitialized = true;
-      _onMessageComplete();
+      if (initMsg["init_callback"] == true) {
+        _isInitialized = true;
+        _onMessageComplete();
+      }
       return;
     }
     message != null
@@ -358,12 +359,12 @@ class ChatModel {
 
   void _onMessageComplete() {
     isTalking = false;
-    _isQuerying = false;
+    _isQuerying(false);
     lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
   }
 
   void _startQuerying() {
-    _isQuerying = true;
+    _isQuerying(true);
   }
 
   Future<void> uploadFile({required String filename, Uint8List? file}) async {

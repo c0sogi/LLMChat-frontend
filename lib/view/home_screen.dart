@@ -23,29 +23,35 @@ class HomeScreen extends StatelessWidget {
           ),
           onPressed: () =>
               loginViewModel.scaffoldKey.currentState?.openDrawer(),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Obx(() => loginViewModel.jwtToken.isEmpty
-                ? const Icon(Icons.menu)
-                : const Icon(Icons.menu_open)),
-            const SizedBox(width: 8),
-            Obx(() => loginViewModel.jwtToken.isEmpty
-                ? const Text('Not Logged In')
-                : Text(loginViewModel.username)),
-          ]),
+          child: Tooltip(
+            message: "Open menu",
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Obx(() => loginViewModel.jwtToken.isEmpty
+                  ? const Icon(Icons.menu)
+                  : const Icon(Icons.menu_open)),
+              const SizedBox(width: 8),
+              Obx(() => loginViewModel.jwtToken.isEmpty
+                  ? const Text('Not Logged In')
+                  : Text(loginViewModel.username)),
+            ]),
+          ),
         ),
         actions: [
           Obx(
             () => loginViewModel.jwtToken.isEmpty
                 ? const SizedBox()
-                : FilledButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                : Tooltip(
+                    message: "Logout",
+                    child: FilledButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
+                      onPressed: loginViewModel.logout,
+                      child: const Icon(Icons.logout_outlined),
                     ),
-                    onPressed: loginViewModel.logout,
-                    child: const Icon(Icons.logout_outlined),
                   ),
           ),
           const SizedBox(width: 8),

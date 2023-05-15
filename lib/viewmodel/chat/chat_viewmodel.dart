@@ -8,6 +8,16 @@ import '../../app/app_config.dart';
 import '../../model/chat/chat_model.dart';
 import '../../model/message/message_model.dart';
 
+class ChatRoomModel {
+  final String chatRoomId;
+  final RxString chatRoomName;
+  final RxBool isChatRoomNameEditing = false.obs;
+  ChatRoomModel({
+    required this.chatRoomId,
+    String? chatRoomName,
+  }) : chatRoomName = (chatRoomName ?? "").obs;
+}
+
 class ChatViewModel extends GetxController {
   // models
   Rx<ChatModel>? _chatModel;
@@ -25,7 +35,8 @@ class ChatViewModel extends GetxController {
       });
   final ScrollController _scrollController = ScrollController();
   final RxBool isChatModelInitialized = false.obs;
-  final RxList<String> chatRoomIds = <String>[].obs;
+  final RxList<ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
+  final RxInt lengthOfMessages = 0.obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
       message:
@@ -39,9 +50,10 @@ class ChatViewModel extends GetxController {
   bool _autoScroll = true;
 
   bool get isTalking => _chatModel?.value.isTalking ?? false;
+  bool get isQuerying => _chatModel?.value.isQuerying ?? false;
   ScrollController get scrollController => _scrollController;
   bool get isTranslateToggled => _chatModel?.value.isTranslateToggled ?? false;
-  int? get length => _chatModel?.value.messages.length;
+  int get length => lengthOfMessages.value;
   List<MessageModel>? get messages => _chatModel?.value.messages;
 
   @override
@@ -114,7 +126,8 @@ class ChatViewModel extends GetxController {
     }
     _chatModel = ChatModel(
       updateViewCallback: (dynamic raw) => _chatModel?.update((val) {}),
-      chatRoomIds: chatRoomIds,
+      chatRooms: chatRooms,
+      lengthOfMessages: lengthOfMessages,
     ).obs;
     await _chatModel!.value.beginChat(apiKey);
     _chatModel!.update((_) {});
@@ -148,6 +161,14 @@ class ChatViewModel extends GetxController {
         messageController.clear();
       }
     });
+  }
+
+  void sendText(String text) {
+    _chatModel?.value.sendText(text);
+  }
+
+  void sendJson(Map<String, dynamic> json) {
+    _chatModel?.value.sendJson(json);
   }
 
   void resendMessage() {
