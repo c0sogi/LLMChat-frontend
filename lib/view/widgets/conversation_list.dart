@@ -20,6 +20,7 @@ class ConversationList extends StatelessWidget {
             shrinkWrap: true,
             itemCount: chatViewModel.chatRoomIds.length,
             itemBuilder: (context, index) {
+              final String chatRoomId = chatViewModel.chatRoomIds[index];
               return ListTile(
                 title: Row(
                   children: [
@@ -35,7 +36,7 @@ class ConversationList extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              "Chatroom",
+                              "Chat",
                               style: TextStyle(
                                 color: ThemeViewModel.idleColor,
                                 fontSize: 18,
@@ -44,7 +45,10 @@ class ConversationList extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
-                            Text(chatViewModel.chatRoomIds[index])
+                            Text(chatRoomId.toUpperCase().substring(
+                                  0,
+                                  chatRoomId.length > 6 ? 6 : chatRoomId.length,
+                                ))
                           ],
                         ),
                       ),
@@ -97,25 +101,29 @@ class CreateNewConversation extends StatelessWidget {
       color: Theme.of(context).primaryColor,
       elevation: 5,
       child: ListTile(
-        leading: Row(
-          mainAxisSize: MainAxisSize.min,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Icon(
               Icons.add,
               color: Colors.white,
             ),
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "New Chat",
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
             Icon(
-              Icons.chat,
+              Icons.chat_bubble,
               color: Colors.white,
             ),
           ],
         ),
         tileColor: Theme.of(context).secondaryHeaderColor,
-        title: const Text(
-          "Create New Chatroom",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.start,
-        ),
         onTap: () {
           final newChatRoomId = const Uuid().v4().replaceAll('-', '');
           Get.find<ChatViewModel>().changeChatRoom(chatRoomId: newChatRoomId);

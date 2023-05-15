@@ -26,11 +26,11 @@ class ChatView extends StatelessWidget {
             colors: ThemeViewModel.defaultGradientColors,
           ),
         ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Obx(
-                () => chatViewModel.isChatModelInitialized.value
+        child: Obx(
+          () => Column(
+            children: [
+              Expanded(
+                child: chatViewModel.isChatModelInitialized.value
                     ? ListView.builder(
                         controller: chatViewModel.scrollController,
                         itemCount: chatViewModel.length,
@@ -110,9 +110,9 @@ class ChatView extends StatelessWidget {
                         },
                       ),
               ),
-            ),
-            const ChatInput(),
-          ],
+              if (chatViewModel.isChatModelInitialized.value) const ChatInput(),
+            ],
+          ),
         ),
       );
     });

@@ -101,6 +101,8 @@ class AuthButtons extends StatelessWidget {
                     ),
                   ),
                   Checkbox(
+                    checkColor: ThemeViewModel.idleColor,
+                    activeColor: Colors.white,
                     value: loginViewModel.isRemembered,
                     onChanged: (bool? value) {
                       if (value != null) {
@@ -249,6 +251,9 @@ class ApiKeysList extends StatelessWidget {
         itemBuilder: (context, index) {
           final apiKey = loginViewModel.apiKeys[index];
           return Card(
+            color: loginViewModel.selectedApiKey.isEmpty
+                ? ThemeViewModel.idleColor.withOpacity(0.5)
+                : ThemeViewModel.activeColor.withOpacity(0.5),
             elevation: 5,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
@@ -283,8 +288,8 @@ class LoginHeader extends StatelessWidget {
     return Obx(
       () => Card(
         color: loginViewModel.selectedApiKey.isEmpty
-            ? ThemeViewModel.idleColor
-            : ThemeViewModel.activeColor,
+            ? ThemeViewModel.idleColor.withOpacity(0.5)
+            : ThemeViewModel.activeColor.withOpacity(0.5),
         elevation: 5,
         child: Column(
           // Column 위젯으로 변경하여 위젯들을 세로로 배치합니다.
@@ -296,7 +301,7 @@ class LoginHeader extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.only(right: 10, top: 10),
                   child: CircleAvatar(
-                    radius: 20,
+                    radius: 40,
                     backgroundImage: ChatImageModel.user,
                   ),
                 ),
@@ -375,12 +380,21 @@ class CreateNewApiKey extends StatelessWidget {
       color: Theme.of(context).primaryColor,
       elevation: 5,
       child: ListTile(
-        leading: Row(
-          mainAxisSize: MainAxisSize.min,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Icon(
               Icons.add,
               color: Colors.white,
+            ),
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "New Key",
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                textAlign: TextAlign.start,
+              ),
             ),
             Icon(
               Icons.vpn_key,
@@ -389,11 +403,6 @@ class CreateNewApiKey extends StatelessWidget {
           ],
         ),
         tileColor: Theme.of(context).secondaryHeaderColor,
-        title: const Text(
-          "Create New API Key",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-          textAlign: TextAlign.start,
-        ),
         onTap: () async =>
             await loginViewModel.createNewApiKey(userMemo: "ChatGPT API Key"),
       ),

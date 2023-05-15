@@ -1,5 +1,5 @@
 class Config {
-  static const host = "localhost:8000";
+  static const host = "localhost:8001";
   static const websocketSchema = "ws";
   static const httpSchema = "http";
 

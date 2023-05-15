@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
 import '../../viewmodel/chat/chat_viewmodel.dart';
 
@@ -49,39 +50,54 @@ class BottomToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        // Upload file button
-        IconButton(
-          onPressed: () => Get.find<ChatViewModel>().uploadFile(),
-          icon: const Icon(Icons.file_upload),
-        ),
-        // Upload audio button
-        IconButton(
-          onPressed: () => Get.find<ChatViewModel>().uploadAudio(),
-          icon: const Icon(Icons.mic),
-        ),
-        // Upload image button
-        IconButton(
-          onPressed: () => Get.find<ChatViewModel>().uploadImage(),
-          icon: const Icon(Icons.image),
-        ),
-        // Expanded box
-        Expanded(
-          child: Container(),
-        ),
-        const Text('영어로 번역'),
-        Obx(
-          () => Get.find<ChatViewModel>().isChatModelInitialized.value
-              ? Switch(
-                  value: Get.find<ChatViewModel>().isTranslateToggled,
-                  onChanged: (value) =>
-                      Get.find<ChatViewModel>().toggleTranslate(),
-                )
-              : Container(),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // Upload file button
+          FilledButton(
+            style: ElevatedButton.styleFrom(
+              surfaceTintColor: ThemeViewModel.idleColor,
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            onPressed: () => Get.find<ChatViewModel>().uploadFile(),
+            child: Row(children: const [
+              Icon(Icons.document_scanner),
+              SizedBox(width: 8),
+              Text('Embed document'),
+            ]),
+          ),
+          // Upload audio button
+          // IconButton(
+          //   onPressed: () => Get.find<ChatViewModel>().uploadAudio(),
+          //   icon: const Icon(Icons.mic),
+          // ),
+          // // Upload image button
+          // IconButton(
+          //   onPressed: () => Get.find<ChatViewModel>().uploadImage(),
+          //   icon: const Icon(Icons.image),
+          // ),
+          // Expanded box
+          Expanded(
+            child: Container(),
+          ),
+          const Text('영어로 번역'),
+          Obx(
+            () => Get.find<ChatViewModel>().isChatModelInitialized.value
+                ? Switch(
+                    activeColor: ThemeViewModel.idleColor,
+                    value: Get.find<ChatViewModel>().isTranslateToggled,
+                    onChanged: (value) =>
+                        Get.find<ChatViewModel>().toggleTranslate(),
+                  )
+                : Container(),
+          ),
+        ],
+      ),
     );
   }
 }

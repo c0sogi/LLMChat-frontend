@@ -165,6 +165,9 @@ class ChatViewModel extends GetxController {
   }
 
   Future<void> uploadFile() async {
+    if (!isChatModelInitialized.value) {
+      return;
+    }
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
       await _chatModel?.value.uploadFile(

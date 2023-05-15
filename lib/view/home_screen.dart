@@ -9,13 +9,55 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final LoginViewModel loginViewModel = Get.find<LoginViewModel>();
     return Scaffold(
-      key: Get.find<LoginViewModel>().scaffoldKey,
+      key: loginViewModel.scaffoldKey,
       appBar: AppBar(
-        title: const Text('ChatGPT'),
+        leadingWidth: 200,
+        leading: FilledButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          onPressed: () =>
+              loginViewModel.scaffoldKey.currentState?.openDrawer(),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Obx(() => loginViewModel.jwtToken.isEmpty
+                ? const Icon(Icons.menu)
+                : const Icon(Icons.menu_open)),
+            const SizedBox(width: 8),
+            Obx(() => loginViewModel.jwtToken.isEmpty
+                ? const Text('Not Logged In')
+                : Text(loginViewModel.username)),
+          ]),
+        ),
+        actions: [
+          Obx(
+            () => loginViewModel.jwtToken.isEmpty
+                ? const SizedBox()
+                : FilledButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: loginViewModel.logout,
+                    child: const Icon(Icons.logout_outlined),
+                  ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
-      drawer: const Drawer(
-        child: LoginDrawer(),
+      drawer: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: Colors.transparent,
+        ),
+        child: const Drawer(
+          child: LoginDrawer(),
+        ),
       ),
       body: Row(
         children: const [
