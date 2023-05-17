@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_web/model/chat/chat_image_model.dart';
+import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
@@ -21,6 +22,8 @@ class LoginDrawer extends StatelessWidget {
             : Column(
                 children: [
                   const LoginHeader(),
+                  if (loginViewModel.selectedApiKey.isNotEmpty)
+                    const ModelSelectionDropdown(),
                   const CreateNewApiKey(),
                   Expanded(
                     child: SingleChildScrollView(
@@ -38,6 +41,70 @@ class LoginDrawer extends StatelessWidget {
                 ],
               ),
       ),
+    );
+  }
+}
+
+class ModelSelectionDropdown extends StatelessWidget {
+  const ModelSelectionDropdown({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Expanded(
+          child: Text(
+            "Chat Model",
+            style: TextStyle(color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Expanded(
+          child: Obx(
+            () => DropdownButton<String>(
+              elevation: 0,
+              dropdownColor: ThemeViewModel.activeColor,
+              alignment: Alignment.center,
+              focusColor: Colors.transparent,
+              isExpanded: true,
+              value: chatViewModel.selectedModel.value.isEmpty
+                  ? null
+                  : chatViewModel.selectedModel.value,
+              style: const TextStyle(color: Colors.white),
+              iconEnabledColor: Colors.white,
+              items: chatViewModel.models
+                  .map<DropdownMenuItem<String>>((String menuItem) {
+                return DropdownMenuItem<String>(
+                  alignment: Alignment.center,
+                  value: menuItem,
+                  child: Text(
+                    menuItem,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              }).toList(),
+              // hint: const Text(
+              //   "Please choose a langauage",
+              //   style: TextStyle(
+              //       color: Colors.white,
+              //       fontSize: 14,
+              //       fontWeight: FontWeight.w500),
+              // ),
+              onChanged: (String? value) {
+                if (value != null) {
+                  chatViewModel.sendJson({"model": value});
+                }
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -12,14 +12,14 @@ class ChatModel {
   bool _isInitialized = false;
   WebSocketModel? _webSocketModel;
   String? _chatRoomId;
-  final RxBool _isQuerying = false.obs;
   final List<MessageModel> _messages = <MessageModel>[];
+  final RxBool _isQuerying = false.obs;
   final void Function(dynamic) _updateViewCallback;
   final RxList<ChatRoomModel> _chatRooms;
-  final RxInt lengthOfMessages;
+  final RxInt _lengthOfMessages;
+  final RxList<String> _models;
+  final RxString _selectedModel;
 
-  int get length => _messages.length;
-  String? get chatRoomId => _chatRoomId;
   List<MessageModel> get messages => _messages;
   bool get isQuerying => _isQuerying.value;
   bool get ready =>
@@ -30,9 +30,14 @@ class ChatModel {
   ChatModel({
     required void Function(dynamic) updateViewCallback,
     required RxList<ChatRoomModel> chatRooms,
-    required this.lengthOfMessages,
-  })  : _updateViewCallback = updateViewCallback,
-        _chatRooms = chatRooms;
+    required RxInt lengthOfMessages,
+    required RxList<String> models,
+    required RxString selectedModel,
+  })  : _lengthOfMessages = lengthOfMessages,
+        _updateViewCallback = updateViewCallback,
+        _chatRooms = chatRooms,
+        _models = models,
+        _selectedModel = selectedModel;
 
   Future<void> beginChat(String apiKey) async {
     // print("beginning chat");
@@ -42,7 +47,7 @@ class ChatModel {
         _updateViewCallback(raw);
       },
       onErrCallback: (dynamic err) => {
-        _onMessageComplete(),
+        _onQueryComplete(finishedMessage: true),
       },
       onSuccessConnectCallback: () => addChatMessage(
         message: 'Connected to server.',
@@ -161,7 +166,7 @@ class ChatModel {
     }
 
     _messages.clear();
-    lengthOfMessages(0);
+    _lengthOfMessages(0);
     if (clearViewOnly) {
       return;
     }
@@ -202,7 +207,7 @@ class ChatModel {
       datetime: datetime,
       modelName: modelName,
     ));
-    lengthOfMessages(lengthOfMessages.value + 1);
+    _lengthOfMessages(_lengthOfMessages.value + 1);
   }
 
   void appendToLastChatMessageWhere(
@@ -222,10 +227,11 @@ class ChatModel {
     }
   }
 
-  DateTime parseFromTimestamp(int timestamp) {
+  DateTime parseLocaltimeFromTimestamp(int timestamp) {
     final String timecode = timestamp.toString();
     return DateTime.parse(
-        "${timecode.substring(0, 8)}T${timecode.substring(8)}");
+      "${timecode.substring(0, 8)}T${timecode.endsWith('Z') ? timecode.substring(8) : '${timecode.substring(8)}Z'}",
+    ).toLocal();
   }
 
   void _messageHandler(dynamic rawText) {
@@ -234,7 +240,7 @@ class ChatModel {
     if (rcvd["chat_room_id"] != null && rcvd["chat_room_id"] != _chatRoomId) {
       _chatRoomId = rcvd["chat_room_id"];
       messages.clear();
-      lengthOfMessages(0);
+      _lengthOfMessages(0);
       addChatMessage(
         message: "You are now in chat `$_chatRoomId`",
         isFinished: true,
@@ -261,21 +267,29 @@ class ChatModel {
         );
       }
       if (initMsg["previous_chats"] != null) {
+        clearChat(clearViewOnly: true);
         for (final Map<String, dynamic> msg
             in List<Map<String, dynamic>>.from(initMsg["previous_chats"])) {
           addChatMessage(
             message: msg["content"] ?? "",
             isGptSpeaking: msg["is_user"] ?? false ? false : true,
             isFinished: true,
-            datetime: parseFromTimestamp(msg["timestamp"]),
+            datetime: parseLocaltimeFromTimestamp(msg["timestamp"]),
             modelName: msg["model_name"],
           );
         }
       }
-      if (initMsg["init_callback"] == true) {
-        _isInitialized = true;
-        _onMessageComplete();
+      if (initMsg["selected_model"] != null) {
+        _selectedModel(initMsg["selected_model"]);
       }
+      if (initMsg["models"] != null) {
+        _models.assignAll(List<String>.from(initMsg["models"]));
+      }
+      if (initMsg["wait_next_query"] ?? false) {
+        return;
+      }
+      _isInitialized = true;
+      _onQueryComplete(finishedMessage: false);
       return;
     }
     message != null
@@ -289,7 +303,7 @@ class ChatModel {
               )
         : _onNullMessage(modelName: modelName);
     if (isFinished) {
-      _onMessageComplete();
+      _onQueryComplete(finishedMessage: true);
     }
   }
 
@@ -357,10 +371,12 @@ class ChatModel {
     }
   }
 
-  void _onMessageComplete() {
+  void _onQueryComplete({required bool finishedMessage}) {
     isTalking = false;
     _isQuerying(false);
-    lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
+    if (finishedMessage) {
+      lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
+    }
   }
 
   void _startQuerying() {

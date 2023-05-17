@@ -37,6 +37,8 @@ class ChatViewModel extends GetxController {
   final RxBool isChatModelInitialized = false.obs;
   final RxList<ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
   final RxInt lengthOfMessages = 0.obs;
+  final RxString selectedModel = "".obs;
+  final RxList<String> models = <String>[].obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
       message:
@@ -128,6 +130,8 @@ class ChatViewModel extends GetxController {
       updateViewCallback: (dynamic raw) => _chatModel?.update((val) {}),
       chatRooms: chatRooms,
       lengthOfMessages: lengthOfMessages,
+      models: models,
+      selectedModel: selectedModel,
     ).obs;
     await _chatModel!.value.beginChat(apiKey);
     _chatModel!.update((_) {});
