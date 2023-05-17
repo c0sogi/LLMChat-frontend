@@ -3,7 +3,7 @@ class Config {
   static const websocketSchema = "ws";
   static const httpSchema = "http";
 
-  static const String webSocketUrl = "$websocketSchema://$host/ws/chatgpt";
+  static const String webSocketUrl = "$websocketSchema://$host/ws/chat";
   static const String httpUrl = "$httpSchema://$host";
   static const String loginUrl = "$httpUrl/api/auth/login/email";
   static const String registerUrl = "$httpUrl/api/auth/register/email";

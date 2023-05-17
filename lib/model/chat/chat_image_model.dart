@@ -5,7 +5,7 @@ class ChatImageModel {
     'assets/images/user_profile.png',
   );
   static const AssetImage openai = AssetImage(
-    'assets/images/gpt_profile.png',
+    'assets/images/openai_profile.png',
   );
   static const AssetImage vicuna = AssetImage(
     'assets/images/vicuna_profile.jpg',

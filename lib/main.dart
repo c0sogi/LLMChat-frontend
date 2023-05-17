@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData.dark(),
-      title: "Chat with GPT",
+      title: "LLMChat",
       debugShowCheckedModeBanner: false,
       initialBinding: AppBinding(),
       home: const HomeScreen(),

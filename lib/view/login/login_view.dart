@@ -403,7 +403,7 @@ class CreateNewApiKey extends StatelessWidget {
         ),
         tileColor: Theme.of(context).secondaryHeaderColor,
         onTap: () async =>
-            await loginViewModel.createNewApiKey(userMemo: "ChatGPT API Key"),
+            await loginViewModel.createNewApiKey(userMemo: "API Key"),
       ),
     );
   }
