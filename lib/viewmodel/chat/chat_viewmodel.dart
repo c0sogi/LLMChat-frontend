@@ -47,6 +47,7 @@ class ChatViewModel extends GetxController {
   ];
 
   ScrollController get scrollController => _scrollController;
+  bool? get ready => _chatModel?.ready;
   RxBool? get isTranslateToggled => _chatModel?.isTranslateToggled;
   RxBool? get isQuerying => _chatModel?.isQuerying;
   RxString? get selectedModel => _chatModel?.selectedModel;

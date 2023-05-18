@@ -123,11 +123,11 @@ class ChatView extends StatelessWidget {
                                 ],
                               ),
                               if (!chatViewModel.messages![index].isGptSpeaking)
-                                const Padding(
+                                Padding(
                                   padding: EdgeInsets.only(right: 10, top: 10),
                                   child: CircleAvatar(
                                     radius: 20,
-                                    backgroundImage: ChatImageModel.user,
+                                    backgroundImage: ChatImageModel.user.value,
                                   ),
                                 ),
                             ],

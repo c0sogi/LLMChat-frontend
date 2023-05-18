@@ -1,9 +1,14 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class ChatImageModel {
-  static const AssetImage user = AssetImage(
-    'assets/images/user_profile.png',
-  );
+  // static const AssetImage user = AssetImage(
+  //   'assets/images/user_profile.png',
+  // );
+  static Rx<NetworkImage?> user = Rx<NetworkImage?>(null);
   static const AssetImage openai = AssetImage(
     'assets/images/openai_profile.png',
   );
@@ -23,5 +28,17 @@ class ChatImageModel {
       return ai;
     }
     return vicuna;
+  }
+
+  static String gravatarUrl(String email) {
+    var emailTrimmed = email.trim().toLowerCase();
+    var bytes = utf8.encode(emailTrimmed);
+    var digest = md5.convert(bytes);
+
+    return 'https://www.gravatar.com/avatar/$digest?d=wavatar';
+  }
+
+  static void setUserImage(String email) {
+    user(NetworkImage(gravatarUrl(email)));
   }
 }

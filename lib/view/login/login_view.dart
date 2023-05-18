@@ -91,7 +91,7 @@ class ModelSelectionDropdown extends StatelessWidget {
               }).toList(),
               onChanged: (String? value) {
                 if (value != null &&
-                    !Get.find<ChatViewModel>().isQuerying!.value) {
+                    (Get.find<ChatViewModel>().ready ?? false)) {
                   chatViewModel.sendJson!({"model": value});
                 }
               },
@@ -358,11 +358,11 @@ class LoginHeader extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(right: 10, top: 10),
+                Padding(
+                  padding: const EdgeInsets.only(right: 10, top: 10),
                   child: CircleAvatar(
                     radius: 40,
-                    backgroundImage: ChatImageModel.user,
+                    backgroundImage: ChatImageModel.user.value,
                   ),
                 ),
                 Column(

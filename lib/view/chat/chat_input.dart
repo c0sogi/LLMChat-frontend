@@ -137,22 +137,22 @@ class MessageButtons extends StatelessWidget {
           ),
         ),
         Obx(
-          () => chatViewModel.isQuerying!.value
+          () => chatViewModel.ready ?? false
               ? Tooltip(
-                  message: "Stop query",
-                  showDuration: const Duration(milliseconds: 0),
-                  child: IconButton(
-                    onPressed: () => chatViewModel.sendText!("stop"),
-                    icon: const Icon(Icons.stop),
-                  ),
-                )
-              : Tooltip(
                   message: "Send message",
                   showDuration: const Duration(milliseconds: 0),
                   waitDuration: const Duration(milliseconds: 500),
                   child: IconButton(
                     onPressed: chatViewModel.sendMessage,
                     icon: const Icon(Icons.send),
+                  ),
+                )
+              : Tooltip(
+                  message: "Stop query",
+                  showDuration: const Duration(milliseconds: 0),
+                  child: IconButton(
+                    onPressed: () => chatViewModel.sendText!("stop"),
+                    icon: const Icon(Icons.stop),
                   ),
                 ),
         ),

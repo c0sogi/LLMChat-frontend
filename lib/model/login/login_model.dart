@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
 
@@ -80,39 +84,33 @@ class InfoSnackBarModel extends SnackBarModel {
 }
 
 class LoginModel {
-  final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
-  final AuthService _authService = AuthService();
+  final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
+  final List<dynamic> apiKeys = <dynamic>[];
 
-  final List<dynamic> _apiKeys = <dynamic>[];
-  String _jwtToken = '';
-  String _selectedApiKey = '';
+  String jwtToken = "";
+  String selectedApiKey = "";
   bool isRemembered = false;
-  String _username = "";
-
-  GlobalKey<FormBuilderState> get formKey => _formKey;
-  List<dynamic> get apiKeys => _apiKeys;
-  String get jwtToken => _jwtToken;
-  String get selectedApiKey => _selectedApiKey;
-  String get username => _username;
+  String username = "";
 
   Future<SnackBarModel?> init() async {
     return await loadJwtTokenFromLocalStorage();
   }
 
   void close() {
-    _formKey.currentState?.reset();
+    formKey.currentState?.reset();
   }
 
   void onClickApiKey({required String accessKey, required String userMemo}) {
     // Save the selected API key for later use and show a Snackbar for visual confirmation
-    _selectedApiKey = accessKey;
+    selectedApiKey = accessKey;
   }
 
   Future<String?> onGetToken(String token) async {
-    _jwtToken = token;
+    jwtToken = token;
     if (isRemembered) {
-      await _authService.saveToken(token);
+      await AuthService.saveToken(token);
     }
+
     final List<String?> result = await Future.wait([
       JsonFetchUtils.fetch(
         fetchMethod: FetchMethod.get,
@@ -121,7 +119,7 @@ class LoginModel {
         successCode: 200,
         messageOnFail: "Failed to fetch API Keys",
         onSuccess: (dynamic body) async {
-          _apiKeys.assignAll(body);
+          apiKeys.assignAll(body);
         },
         onFail: (dynamic bodyDecoded) async {
           if (bodyDecoded is Map && bodyDecoded["detail"] == "Token Expired") {
@@ -136,7 +134,8 @@ class LoginModel {
           successCode: 200,
           messageOnFail: "Failed to fetch user info",
           onSuccess: (dynamic body) async {
-            _username = body['email'];
+            username = body['email'];
+            ChatImageModel.setUserImage(username);
           }),
     ]);
     // If all the results are null, return null. Otherwise, return the joined string.
@@ -192,7 +191,7 @@ class LoginModel {
   Future<SnackBarModel> unregister() async {
     final String? fetchResult = await JsonFetchUtils.fetch(
       fetchMethod: FetchMethod.delete,
-      authorization: _jwtToken,
+      authorization: jwtToken,
       url: Config.unregisterUrl,
       successCode: 204,
       messageOnFail: "Failed to unregister",
@@ -249,20 +248,20 @@ class LoginModel {
   }
 
   Future<void> logout() async {
-    _selectedApiKey = "";
-    _apiKeys.clear();
+    selectedApiKey = "";
+    apiKeys.clear();
     await deleteToken();
   }
 
   Future<void> deleteToken() async {
-    _jwtToken = "";
-    await _authService.deleteToken();
+    jwtToken = "";
+    await AuthService.deleteToken();
   }
 
   Future<SnackBarModel?> loadJwtTokenFromLocalStorage() async {
-    final storedToken = await _authService.getToken();
+    final storedToken = await AuthService.getToken();
     if (storedToken != null) {
-      _jwtToken = storedToken;
+      jwtToken = storedToken;
       final String? errorMessages = await onGetToken(storedToken);
       return errorMessages == null
           ? SuccessSnackBarModel(
@@ -280,13 +279,13 @@ class LoginModel {
   Future<SnackBarModel> createNewApiKey({required String userMemo}) async {
     final String? postResult = await JsonFetchUtils.fetch(
       fetchMethod: FetchMethod.post,
-      authorization: _jwtToken,
+      authorization: jwtToken,
       url: Config.postApiKeysUrl,
       body: {"user_memo": userMemo},
       successCode: 201,
       messageOnFail: "Failed to create API key.",
       onSuccess: (dynamic body) async {
-        _apiKeys.add(body);
+        apiKeys.add(body);
       },
     );
     return postResult == null
@@ -298,5 +297,9 @@ class LoginModel {
             title: "Error",
             message: postResult,
           );
+  }
+
+  static String gravatarUrl(String email) {
+    return 'https://www.gravatar.com/avatar/${md5.convert(utf8.encode(email.trim().toLowerCase()))}';
   }
 }
