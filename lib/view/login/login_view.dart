@@ -71,12 +71,12 @@ class ModelSelectionDropdown extends StatelessWidget {
               alignment: Alignment.center,
               focusColor: Colors.transparent,
               isExpanded: true,
-              value: chatViewModel.selectedModel.value.isEmpty
+              value: chatViewModel.selectedModel!.value.isEmpty
                   ? null
-                  : chatViewModel.selectedModel.value,
+                  : chatViewModel.selectedModel!.value,
               style: const TextStyle(color: Colors.white),
               iconEnabledColor: Colors.white,
-              items: chatViewModel.models
+              items: chatViewModel.models!
                   .map<DropdownMenuItem<String>>((String menuItem) {
                 return DropdownMenuItem<String>(
                   alignment: Alignment.center,
@@ -89,16 +89,10 @@ class ModelSelectionDropdown extends StatelessWidget {
                   ),
                 );
               }).toList(),
-              // hint: const Text(
-              //   "Please choose a langauage",
-              //   style: TextStyle(
-              //       color: Colors.white,
-              //       fontSize: 14,
-              //       fontWeight: FontWeight.w500),
-              // ),
               onChanged: (String? value) {
-                if (value != null) {
-                  chatViewModel.sendJson({"model": value});
+                if (value != null &&
+                    !Get.find<ChatViewModel>().isQuerying!.value) {
+                  chatViewModel.sendJson!({"model": value});
                 }
               },
             ),

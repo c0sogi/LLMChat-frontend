@@ -36,7 +36,7 @@ class ChatView extends StatelessWidget {
                 child: chatViewModel.isChatModelInitialized.value
                     ? ListView.builder(
                         controller: chatViewModel.scrollController,
-                        itemCount: chatViewModel.length,
+                        itemCount: chatViewModel.messages!.length,
                         itemBuilder: (context, index) {
                           if (index >= chatViewModel.messages!.length) {
                             return const SizedBox();

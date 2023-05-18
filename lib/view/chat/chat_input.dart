@@ -95,9 +95,9 @@ class BottomToolbar extends StatelessWidget {
             () => Get.find<ChatViewModel>().isChatModelInitialized.value
                 ? Switch(
                     activeColor: ThemeViewModel.idleColor,
-                    value: Get.find<ChatViewModel>().isTranslateToggled,
+                    value: Get.find<ChatViewModel>().isTranslateToggled!.value,
                     onChanged: (value) =>
-                        Get.find<ChatViewModel>().toggleTranslate(),
+                        Get.find<ChatViewModel>().toggleTranslate!(),
                   )
                 : Container(),
           ),
@@ -123,7 +123,7 @@ class MessageButtons extends StatelessWidget {
           showDuration: const Duration(milliseconds: 0),
           waitDuration: const Duration(milliseconds: 500),
           child: IconButton(
-            onPressed: () => chatViewModel.clearChat(clearViewOnly: false),
+            onPressed: () => chatViewModel.clearChat!(clearViewOnly: false),
             icon: const Icon(Icons.clear_all),
           ),
         ),
@@ -132,17 +132,17 @@ class MessageButtons extends StatelessWidget {
           showDuration: const Duration(milliseconds: 0),
           waitDuration: const Duration(milliseconds: 500),
           child: IconButton(
-            onPressed: () => chatViewModel.resendMessage(),
+            onPressed: () => chatViewModel.resendUserMessage!(),
             icon: const Icon(Icons.refresh),
           ),
         ),
         Obx(
-          () => chatViewModel.isQuerying
+          () => chatViewModel.isQuerying!.value
               ? Tooltip(
                   message: "Stop query",
                   showDuration: const Duration(milliseconds: 0),
                   child: IconButton(
-                    onPressed: () => chatViewModel.sendText("stop"),
+                    onPressed: () => chatViewModel.sendText!("stop"),
                     icon: const Icon(Icons.stop),
                   ),
                 )

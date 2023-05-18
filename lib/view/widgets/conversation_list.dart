@@ -19,9 +19,9 @@ class ConversationList extends StatelessWidget {
         Obx(
           () => ListView.builder(
             shrinkWrap: true,
-            itemCount: chatViewModel.chatRooms.length,
+            itemCount: chatViewModel.chatRooms!.length,
             itemBuilder: (context, index) {
-              final chatRoom = chatViewModel.chatRooms[index];
+              final chatRoom = chatViewModel.chatRooms![index];
               try {
                 chatRoom.chatRoomName(DateFormat('yyyy-MM-dd hh:mm a').format(
                     DateTime.parse(chatRoom.chatRoomName.value).toLocal()));
@@ -49,7 +49,7 @@ class ConversationList extends StatelessWidget {
                                     chatRoom.isChatRoomNameEditing.value =
                                         false;
                                     chatRoom.chatRoomName.value = chatRoomName;
-                                    chatViewModel.sendJson(
+                                    chatViewModel.sendJson!(
                                         {"chat_room_name": chatRoomName});
                                   },
                                   decoration: InputDecoration(
@@ -77,7 +77,7 @@ class ConversationList extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.delete,
                           color: ThemeViewModel.idleColor),
-                      onPressed: () => chatViewModel.deleteChatRoom(
+                      onPressed: () => chatViewModel.deleteChatRoom!(
                         chatRoomId: chatRoom.chatRoomId,
                       ),
                     ),
@@ -95,8 +95,8 @@ class ConversationList extends StatelessWidget {
                     );
                     return;
                   }
-                  chatViewModel.changeChatRoom(
-                    chatRoomId: chatViewModel.chatRooms[index].chatRoomId,
+                  chatViewModel.changeChatRoom!(
+                    chatRoomId: chatViewModel.chatRooms![index].chatRoomId,
                   );
                   loginViewModel.scaffoldKey.currentState!.closeDrawer();
                 },
@@ -145,7 +145,7 @@ class CreateNewConversation extends StatelessWidget {
         tileColor: Theme.of(context).secondaryHeaderColor,
         onTap: () {
           final newChatRoomId = const Uuid().v4().replaceAll('-', '');
-          Get.find<ChatViewModel>().changeChatRoom(chatRoomId: newChatRoomId);
+          Get.find<ChatViewModel>().changeChatRoom!(chatRoomId: newChatRoomId);
         },
       ),
     );

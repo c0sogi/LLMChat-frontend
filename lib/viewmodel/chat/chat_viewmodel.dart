@@ -19,9 +19,6 @@ class ChatRoomModel {
 }
 
 class ChatViewModel extends GetxController {
-  // models
-  Rx<ChatModel>? _chatModel;
-  final TextEditingController messageController = TextEditingController();
   late final FocusNode messageFocusNode = FocusNode(
       debugLabel: "messageFocusNode",
       onKey: (FocusNode node, RawKeyEvent event) {
@@ -33,12 +30,11 @@ class ChatViewModel extends GetxController {
         }
         return KeyEventResult.handled;
       });
+  ChatModel? _chatModel;
+  bool _autoScroll = true;
+  final TextEditingController messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final RxBool isChatModelInitialized = false.obs;
-  final RxList<ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
-  final RxInt lengthOfMessages = 0.obs;
-  final RxString selectedModel = "".obs;
-  final RxList<String> models = <String>[].obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
       message:
@@ -49,14 +45,21 @@ class ChatViewModel extends GetxController {
     MessageModel(
         message: Config.markdownExample, isFinished: true, isGptSpeaking: true)
   ];
-  bool _autoScroll = true;
 
-  bool get isTalking => _chatModel?.value.isTalking ?? false;
-  bool get isQuerying => _chatModel?.value.isQuerying ?? false;
   ScrollController get scrollController => _scrollController;
-  bool get isTranslateToggled => _chatModel?.value.isTranslateToggled ?? false;
-  int get length => lengthOfMessages.value;
-  List<MessageModel>? get messages => _chatModel?.value.messages;
+  RxBool? get isTranslateToggled => _chatModel?.isTranslateToggled;
+  RxBool? get isQuerying => _chatModel?.isQuerying;
+  RxString? get selectedModel => _chatModel?.selectedModel;
+  RxList<String>? get models => _chatModel?.models;
+  RxList<MessageModel>? get messages => _chatModel?.messages;
+  RxList<ChatRoomModel>? get chatRooms => _chatModel?.chatRooms;
+  Function? get changeChatRoom => _chatModel?.changeChatRoom;
+  Function? get deleteChatRoom => _chatModel?.deleteChatRoom;
+  Function? get sendText => _chatModel?.sendText;
+  Function? get sendJson => _chatModel?.sendJson;
+  Function? get resendUserMessage => _chatModel?.resendUserMessage;
+  Function? get clearChat => _chatModel?.clearChat;
+  Function? get toggleTranslate => _chatModel?.toggleTranslate;
 
   @override
   void onInit() {
@@ -79,7 +82,7 @@ class ChatViewModel extends GetxController {
     super.onClose();
     messageController.dispose();
     messageFocusNode.dispose();
-    _chatModel?.close();
+    _chatModel?.clearChat(clearViewOnly: true);
   }
 
   void onKeyFocusNode(
@@ -123,70 +126,25 @@ class ChatViewModel extends GetxController {
     Get.find<ThemeViewModel>().toggleTheme(true);
     // check channel is late initialized or not
     if (isChatModelInitialized.value) {
-      await _chatModel?.value.endChat();
-      _chatModel?.update((_) => {});
+      await _chatModel?.endChat();
     }
-    _chatModel = ChatModel(
-      updateViewCallback: (dynamic raw) => _chatModel?.update((val) {}),
-      chatRooms: chatRooms,
-      lengthOfMessages: lengthOfMessages,
-      models: models,
-      selectedModel: selectedModel,
-    ).obs;
-    await _chatModel!.value.beginChat(apiKey);
-    _chatModel!.update((_) {});
+    _chatModel = ChatModel();
+    await _chatModel!.beginChat(apiKey);
     isChatModelInitialized(true);
   }
 
   Future<void> endChat() async {
     Get.find<ThemeViewModel>().toggleTheme(false);
-    await _chatModel?.value.endChat();
-    _chatModel?.update((_) {});
-  }
-
-  void changeChatRoom({required String chatRoomId}) {
-    _chatModel?.update((val) => val!.changeChatRoom(
-          chatRoomId: chatRoomId,
-        ));
-  }
-
-  void deleteChatRoom({required String chatRoomId}) {
-    _chatModel?.update((val) {
-      val!.deleteChatRoom(chatRoomId: chatRoomId);
-    });
+    await _chatModel?.endChat();
   }
 
   void sendMessage() {
-    if (messageController.text.isEmpty) {
+    if (messageController.text.isEmpty || _chatModel == null) {
       return;
     }
-    _chatModel?.update((val) {
-      if (val!.sendUserMessage(message: messageController.text)) {
-        messageController.clear();
-      }
-    });
-  }
-
-  void sendText(String text) {
-    _chatModel?.value.sendText(text);
-  }
-
-  void sendJson(Map<String, dynamic> json) {
-    _chatModel?.value.sendJson(json);
-  }
-
-  void resendMessage() {
-    _chatModel?.update((val) => val!.resendUserMessage());
-  }
-
-  void clearChat({required bool clearViewOnly}) {
-    _chatModel?.update((val) => val!.clearChat(
-          clearViewOnly: clearViewOnly,
-        ));
-  }
-
-  void toggleTranslate() {
-    _chatModel?.update((val) => val!.toggleTranslate());
+    if (_chatModel!.sendUserMessage(message: messageController.text)) {
+      messageController.clear();
+    }
   }
 
   Future<void> uploadFile() async {
@@ -195,33 +153,10 @@ class ChatViewModel extends GetxController {
     }
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
-      await _chatModel?.value.uploadFile(
+      await _chatModel?.uploadFile(
         filename: result.files.single.name,
         file: result.files.single.bytes,
       );
-      _chatModel?.update((val) {});
     }
-  }
-
-  void uploadImage() {
-    // TODO: Implement upload image logic
-    _chatModel?.update(
-      (val) => val!.addChatMessage(
-        message: "Uploading image not supported yet",
-        isGptSpeaking: false,
-        isFinished: true,
-      ),
-    );
-  }
-
-  void uploadAudio() {
-    // TODO: Implement upload audio logic
-    _chatModel?.update(
-      (val) => val!.addChatMessage(
-        message: "Uploading audio not supported yet",
-        isGptSpeaking: false,
-        isFinished: true,
-      ),
-    );
   }
 }
