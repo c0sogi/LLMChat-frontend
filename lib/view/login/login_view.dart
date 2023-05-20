@@ -91,7 +91,7 @@ class ModelSelectionDropdown extends StatelessWidget {
               }).toList(),
               onChanged: (String? value) {
                 if (value != null &&
-                    (Get.find<ChatViewModel>().ready ?? false)) {
+                    (!(Get.find<ChatViewModel>().isQuerying?.value ?? false))) {
                   chatViewModel.sendJson!({"model": value});
                 }
               },
@@ -311,6 +311,7 @@ class ApiKeysList extends StatelessWidget {
         itemCount: loginViewModel.apiKeys.length,
         itemBuilder: (context, index) {
           final apiKey = loginViewModel.apiKeys[index];
+          print(apiKey['user_memo']);
           return Card(
             color: loginViewModel.selectedApiKey.isEmpty
                 ? ThemeViewModel.idleColor.withOpacity(0.5)

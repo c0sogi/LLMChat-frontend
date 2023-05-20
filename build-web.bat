@@ -1,1 +1,1 @@
-flutter build web --base-href /chat/ --web-renderer canvaskit
+@REM flutter build web --base-href /chat/ --web-renderer canvaskit

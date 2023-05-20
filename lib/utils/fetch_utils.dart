@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 enum FetchMethod {
@@ -45,7 +46,7 @@ class JsonFetchUtils {
         res = await http.delete(Uri.parse(url), headers: headers);
     }
     return getFetchResult<String?>(
-      body: res.body,
+      bodyBytes: res.bodyBytes,
       statusCode: res.statusCode,
       successCode: successCode,
       messageOnSuccess: null,
@@ -56,7 +57,7 @@ class JsonFetchUtils {
   }
 
   static Future<T> getFetchResult<T>({
-    required String? body,
+    required Uint8List bodyBytes,
     required int statusCode,
     required int successCode,
     required T messageOnSuccess,
@@ -67,9 +68,9 @@ class JsonFetchUtils {
     dynamic bodyDecoded;
 
     try {
-      bodyDecoded = jsonDecode(body!);
+      bodyDecoded = jsonDecode(utf8.decode(bodyBytes));
     } catch (_) {
-      bodyDecoded = body;
+      bodyDecoded = bodyBytes;
     }
 
     try {

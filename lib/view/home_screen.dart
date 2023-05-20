@@ -26,13 +26,24 @@ class HomeScreen extends StatelessWidget {
           child: Tooltip(
             message: "Open menu",
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Obx(() => loginViewModel.jwtToken.isEmpty
-                  ? const Icon(Icons.menu)
-                  : const Icon(Icons.menu_open)),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Obx(() => loginViewModel.jwtToken.isEmpty
+                    ? const Icon(Icons.menu)
+                    : const Icon(Icons.menu_open)),
+              ),
               const SizedBox(width: 8),
-              Obx(() => loginViewModel.jwtToken.isEmpty
-                  ? const Text('Not Logged In')
-                  : Text(loginViewModel.username)),
+              Expanded(
+                child: Obx(() => loginViewModel.jwtToken.isEmpty
+                    ? const Text(
+                        'Not Logged In',
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    : Text(loginViewModel.username,
+                        style: const TextStyle(fontSize: 16),
+                        textAlign: TextAlign.left,
+                        overflow: TextOverflow.ellipsis)),
+              ),
             ]),
           ),
         ),

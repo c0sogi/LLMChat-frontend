@@ -102,6 +102,7 @@ class WebSocketModel {
   }
 
   void sendJson(Map<String, dynamic> json) {
+    print(jsonEncode(json));
     sink?.add(jsonEncode(json));
   }
 

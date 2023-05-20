@@ -34,6 +34,7 @@ class ChatViewModel extends GetxController {
   bool _autoScroll = true;
   final TextEditingController messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final RxInt tokens = 0.obs;
   final RxBool isChatModelInitialized = false.obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
@@ -47,9 +48,8 @@ class ChatViewModel extends GetxController {
   ];
 
   ScrollController get scrollController => _scrollController;
-  bool? get ready => _chatModel?.ready;
-  RxBool? get isTranslateToggled => _chatModel?.isTranslateToggled;
   RxBool? get isQuerying => _chatModel?.isQuerying;
+  RxBool? get isTranslateToggled => _chatModel?.isTranslateToggled;
   RxString? get selectedModel => _chatModel?.selectedModel;
   RxList<String>? get models => _chatModel?.models;
   RxList<MessageModel>? get messages => _chatModel?.messages;
@@ -60,7 +60,7 @@ class ChatViewModel extends GetxController {
   Function? get sendJson => _chatModel?.sendJson;
   Function? get resendUserMessage => _chatModel?.resendUserMessage;
   Function? get clearChat => _chatModel?.clearChat;
-  Function? get toggleTranslate => _chatModel?.toggleTranslate;
+  Function(bool)? get toggleTranslate => _chatModel?.toggleTranslate;
 
   @override
   void onInit() {
@@ -129,7 +129,7 @@ class ChatViewModel extends GetxController {
     if (isChatModelInitialized.value) {
       await _chatModel?.endChat();
     }
-    _chatModel = ChatModel();
+    _chatModel = ChatModel(tokens: tokens);
     await _chatModel!.beginChat(apiKey);
     isChatModelInitialized(true);
   }

@@ -11,14 +11,17 @@ class ChatModel {
   bool _isTalking = false;
   bool _isInitialized = false;
   String? _chatRoomId;
-  final RxBool isTranslateToggled = false.obs;
+  final RxInt tokens;
   final RxBool isQuerying = false.obs;
+  final RxBool isTranslateToggled = false.obs;
   final RxString selectedModel = "".obs;
   final RxList<MessageModel> messages = <MessageModel>[].obs;
   final RxList<ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
   final RxList<String> models = <String>[].obs;
 
-  bool get ready =>
+  ChatModel({required this.tokens});
+
+  bool get _ready =>
       !isQuerying.value &&
       (webSocketModel?.isConnected ?? false) &&
       _isInitialized;
@@ -74,6 +77,9 @@ class ChatModel {
       if (initMsg["models"] != null) {
         models.assignAll(List<String>.from(initMsg["models"]));
       }
+      if (initMsg["tokens"] != null) {
+        tokens(initMsg["tokens"]);
+      }
       if (initMsg["wait_next_query"] ?? false) {
         return;
       }
@@ -102,19 +108,21 @@ class ChatModel {
       onMessageCallback: (dynamic raw) {
         _messageHandler(raw);
       },
-      onErrCallback: (dynamic err) => {
-        _stopQuerying(finishedMessage: true),
+      onErrCallback: (dynamic err) => {_stopQuerying(finishedMessage: true)},
+      onSuccessConnectCallback: () => {
+        addChatMessage(
+          message: 'Connected to server.',
+          isGptSpeaking: true,
+          isFinished: true,
+        )
       },
-      onSuccessConnectCallback: () => addChatMessage(
-        message: 'Connected to server.',
-        isGptSpeaking: true,
-        isFinished: true,
-      ),
-      onFailConnectCallback: () => addChatMessage(
-        message: "Couldn't connect to server.",
-        isGptSpeaking: true,
-        isFinished: true,
-      ),
+      onFailConnectCallback: () => {
+        addChatMessage(
+          message: "Couldn't connect to server.",
+          isGptSpeaking: true,
+          isFinished: true,
+        ),
+      },
     );
     await webSocketModel!.connect("${Config.webSocketUrl}/$apiKey");
   }
@@ -131,12 +139,12 @@ class ChatModel {
     }
   }
 
-  void toggleTranslate() {
-    isTranslateToggled(!isTranslateToggled.value);
+  void toggleTranslate(bool value) {
+    isTranslateToggled(value);
   }
 
   void changeChatRoom({required String chatRoomId}) {
-    if (!ready || _chatRoomId == chatRoomId) {
+    if (!_ready || _chatRoomId == chatRoomId) {
       return;
     }
     _startQuerying();
@@ -148,7 +156,7 @@ class ChatModel {
   }
 
   void deleteChatRoom({required String chatRoomId}) {
-    if (!ready) {
+    if (!_ready) {
       return;
     }
     _startQuerying();
@@ -168,7 +176,7 @@ class ChatModel {
   }
 
   bool sendUserMessage({required String message}) {
-    if (!ready) {
+    if (!_ready) {
       return false;
     }
     addChatMessage(
@@ -193,7 +201,7 @@ class ChatModel {
 
   void resendUserMessage() {
     // Implement resend message logic
-    if (!ready) {
+    if (!_ready) {
       return;
     }
 
@@ -217,7 +225,7 @@ class ChatModel {
   }
 
   void clearChat({required bool clearViewOnly}) {
-    if (!ready) {
+    if (!_ready) {
       return;
     }
 

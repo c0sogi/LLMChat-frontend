@@ -51,57 +51,172 @@ class BottomToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: [
+        children: const [
           // Upload file button
-          Tooltip(
-            message: "'Upload PDF, TXT, or other text-included file to embed'",
-            waitDuration: const Duration(milliseconds: 500),
-            showDuration: const Duration(milliseconds: 0),
-            child: FilledButton(
-              style: ElevatedButton.styleFrom(
-                surfaceTintColor: ThemeViewModel.idleColor,
-                backgroundColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              onPressed: () => Get.find<ChatViewModel>().uploadFile(),
-              child: Row(children: const [
-                Icon(Icons.document_scanner),
-                SizedBox(width: 8),
-                Text('Embed document'),
-              ]),
-            ),
-          ),
-          // Upload audio button
-          // IconButton(
-          //   onPressed: () => Get.find<ChatViewModel>().uploadAudio(),
-          //   icon: const Icon(Icons.mic),
-          // ),
-          // // Upload image button
-          // IconButton(
-          //   onPressed: () => Get.find<ChatViewModel>().uploadImage(),
-          //   icon: const Icon(Icons.image),
-          // ),
-          // Expanded box
-          Expanded(
-            child: Container(),
-          ),
-          const Text('영어로 번역'),
-          Obx(
-            () => Get.find<ChatViewModel>().isChatModelInitialized.value
-                ? Switch(
-                    activeColor: ThemeViewModel.idleColor,
-                    value: Get.find<ChatViewModel>().isTranslateToggled!.value,
-                    onChanged: (value) =>
-                        Get.find<ChatViewModel>().toggleTranslate!(),
-                  )
-                : Container(),
-          ),
+          UploadFileBox(),
+          // if (Localizations.localeOf(context) == const Locale('ko', 'KR'))
+          TranslateBox(),
+          Expanded(child: SizedBox()),
+          TokenShowBox(),
         ],
+      ),
+    );
+  }
+}
+
+class TranslateBox extends StatelessWidget {
+  const TranslateBox({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(children: [
+      Transform.translate(
+        offset: const Offset(0, -12),
+        child: Obx(
+          () => Get.find<ChatViewModel>().isChatModelInitialized.value
+              ? Switch(
+                  activeColor: ThemeViewModel.idleColor,
+                  value: Get.find<ChatViewModel>().isTranslateToggled!.value,
+                  onChanged: Get.find<ChatViewModel>().toggleTranslate!,
+                )
+              : Container(),
+        ),
+      ),
+      Transform.translate(
+          offset: const Offset(0, 24),
+          child: const Text('영어로 번역', style: TextStyle(fontSize: 12))),
+    ]);
+  }
+}
+
+class UploadFileBox extends StatelessWidget {
+  const UploadFileBox({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: "Upload PDF, TXT, or other text-included file to embed",
+      waitDuration: const Duration(milliseconds: 500),
+      showDuration: const Duration(milliseconds: 0),
+      child: FilledButton(
+        style: ElevatedButton.styleFrom(
+          surfaceTintColor: ThemeViewModel.idleColor,
+          backgroundColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        onPressed: () => Get.find<ChatViewModel>().uploadFile(),
+        child: Row(children: const [
+          Icon(Icons.document_scanner),
+          SizedBox(width: 8),
+          Text('Embed\nDocument',
+              textAlign: TextAlign.left, style: TextStyle(fontSize: 12)),
+        ]),
+      ),
+    );
+  }
+}
+
+class TokenShowBox extends StatefulWidget {
+  const TokenShowBox({Key? key}) : super(key: key);
+
+  @override
+  State<TokenShowBox> createState() => _TokenShowBoxState();
+}
+
+class _TokenShowBoxState extends State<TokenShowBox>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Color?> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _animation = ColorTween(
+      begin: Colors.white,
+      end: ThemeViewModel.idleColor,
+    ).animate(_controller);
+
+    // Listen to the tokens value change
+    Get.find<ChatViewModel>().tokens.listen((_) {
+      _controller
+        ..reset()
+        ..forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          padding: const EdgeInsets.all(8),
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: _animation.value,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: child,
+        );
+      },
+      child: Obx(
+        () => Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "You've spent",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white,
+              ),
+              maxLines: 1,
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  Get.find<ChatViewModel>().tokens.value.toString(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                ),
+                const Text(
+                  " Tokens",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -137,22 +252,22 @@ class MessageButtons extends StatelessWidget {
           ),
         ),
         Obx(
-          () => chatViewModel.ready ?? false
+          () => chatViewModel.isQuerying?.value ?? false
               ? Tooltip(
+                  message: "Stop query",
+                  showDuration: const Duration(milliseconds: 0),
+                  child: IconButton(
+                    onPressed: () => chatViewModel.sendText!("stop"),
+                    icon: const Icon(Icons.stop),
+                  ),
+                )
+              : Tooltip(
                   message: "Send message",
                   showDuration: const Duration(milliseconds: 0),
                   waitDuration: const Duration(milliseconds: 500),
                   child: IconButton(
                     onPressed: chatViewModel.sendMessage,
                     icon: const Icon(Icons.send),
-                  ),
-                )
-              : Tooltip(
-                  message: "Stop query",
-                  showDuration: const Duration(milliseconds: 0),
-                  child: IconButton(
-                    onPressed: () => chatViewModel.sendText!("stop"),
-                    icon: const Icon(Icons.stop),
                   ),
                 ),
         ),
