@@ -16,6 +16,7 @@ class LoginDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final LoginViewModel loginViewModel = Get.find<LoginViewModel>();
     return Drawer(
+      width: 300,
       child: Obx(
         () => loginViewModel.jwtToken.isEmpty
             ? const LoginForm()
@@ -26,14 +27,17 @@ class LoginDrawer extends StatelessWidget {
                     const ModelSelectionDropdown(),
                   const CreateNewApiKey(),
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const ApiKeysList(),
-                          if (loginViewModel.selectedApiKey.isNotEmpty)
-                            const ConversationList(),
-                        ],
-                      ),
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        const SliverToBoxAdapter(
+                          child: ApiKeysList(),
+                        ),
+                        if (loginViewModel.selectedApiKey.isNotEmpty)
+                          const SliverToBoxAdapter(
+                            child: ConversationList(),
+                          ),
+                      ],
                     ),
                   ),
                   if (loginViewModel.selectedApiKey.isNotEmpty)
@@ -71,9 +75,9 @@ class ModelSelectionDropdown extends StatelessWidget {
               alignment: Alignment.center,
               focusColor: Colors.transparent,
               isExpanded: true,
-              value: chatViewModel.selectedModel!.value.isEmpty
+              value: chatViewModel.selectedModel.value.isEmpty
                   ? null
-                  : chatViewModel.selectedModel!.value,
+                  : chatViewModel.selectedModel.value,
               style: const TextStyle(color: Colors.white),
               iconEnabledColor: Colors.white,
               items: chatViewModel.models!
@@ -307,11 +311,11 @@ class ApiKeysList extends StatelessWidget {
     final loginViewModel = Get.find<LoginViewModel>();
     return Obx(
       () => ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemCount: loginViewModel.apiKeys.length,
         itemBuilder: (context, index) {
           final apiKey = loginViewModel.apiKeys[index];
-          print(apiKey['user_memo']);
           return Card(
             color: loginViewModel.selectedApiKey.isEmpty
                 ? ThemeViewModel.idleColor.withOpacity(0.5)
@@ -360,13 +364,14 @@ class LoginHeader extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 10, top: 10),
+                  padding: const EdgeInsets.all(10),
                   child: CircleAvatar(
                     radius: 40,
                     backgroundImage: ChatImageModel.user.value,
                   ),
                 ),
                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       "Welcome",
@@ -375,7 +380,13 @@ class LoginHeader extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(loginViewModel.username),
+                    SizedBox(
+                        width: 150,
+                        child: Text(
+                          loginViewModel.username,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )),
                   ],
                 ),
               ],

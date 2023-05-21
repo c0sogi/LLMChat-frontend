@@ -12,14 +12,22 @@ class ChatModel {
   bool _isInitialized = false;
   String? _chatRoomId;
   final RxInt tokens;
-  final RxBool isQuerying = false.obs;
-  final RxBool isTranslateToggled = false.obs;
-  final RxString selectedModel = "".obs;
+
+  final RxBool isQuerying;
+  final RxBool isTranslateToggled;
+  final RxBool isQueryToggled;
+
+  final RxString selectedModel;
   final RxList<MessageModel> messages = <MessageModel>[].obs;
   final RxList<ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
   final RxList<String> models = <String>[].obs;
 
-  ChatModel({required this.tokens});
+  ChatModel(
+      {required this.tokens,
+      required this.selectedModel,
+      required this.isQuerying,
+      required this.isTranslateToggled,
+      required this.isQueryToggled});
 
   bool get _ready =>
       !isQuerying.value &&
@@ -139,10 +147,6 @@ class ChatModel {
     }
   }
 
-  void toggleTranslate(bool value) {
-    isTranslateToggled(value);
-  }
-
   void changeChatRoom({required String chatRoomId}) {
     if (!_ready || _chatRoomId == chatRoomId) {
       return;
@@ -192,7 +196,7 @@ class ChatModel {
     );
     _startQuerying();
     webSocketModel!.sendJson({
-      "msg": message,
+      "msg": isQueryToggled.value ? "/query $message" : message,
       "translate": isTranslateToggled.value,
       "chat_room_id": _chatRoomId
     });

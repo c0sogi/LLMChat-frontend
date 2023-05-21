@@ -24,7 +24,7 @@ class ChatInput extends StatelessWidget {
                     textAlignVertical: TextAlignVertical.center,
                     controller: Get.find<ChatViewModel>().messageController,
                     decoration: InputDecoration(
-                      hintText: 'Enter message here...',
+                      hintText: 'Send a message',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -59,6 +59,7 @@ class BottomToolbar extends StatelessWidget {
           UploadFileBox(),
           // if (Localizations.localeOf(context) == const Locale('ko', 'KR'))
           TranslateBox(),
+          QueryBox(),
           Expanded(child: SizedBox()),
           TokenShowBox(),
         ],
@@ -74,22 +75,68 @@ class TranslateBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      Transform.translate(
-        offset: const Offset(0, -12),
-        child: Obx(
-          () => Get.find<ChatViewModel>().isChatModelInitialized.value
-              ? Switch(
+    final RxBool isTranslateToggled =
+        Get.find<ChatViewModel>().isTranslateToggled!;
+    return Column(children: [
+      Obx(
+        () => Get.find<ChatViewModel>().isChatModelInitialized.value
+            ? SizedBox(
+                height: 20,
+                child: Switch(
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   activeColor: ThemeViewModel.idleColor,
-                  value: Get.find<ChatViewModel>().isTranslateToggled!.value,
-                  onChanged: Get.find<ChatViewModel>().toggleTranslate!,
-                )
-              : Container(),
-        ),
+                  value: isTranslateToggled.value,
+                  onChanged: (value) => isTranslateToggled(value),
+                ),
+              )
+            : Container(),
       ),
-      Transform.translate(
-          offset: const Offset(0, 24),
-          child: const Text('영어로 번역', style: TextStyle(fontSize: 12))),
+      Row(
+        children: const [Icon(Icons.translate), Text("Traslate")],
+      ),
+    ]);
+  }
+}
+
+// const Text.rich(
+//   TextSpan(children: [
+//     TextSpan(
+//       text: '영어로\n',
+//       style: TextStyle(fontSize: 10),
+//     ),
+//     TextSpan(
+//       text: '번역',
+//       style: TextStyle(fontSize: 15),
+//     ),
+//   ]),
+//   textAlign: TextAlign.left,
+// ),
+
+class QueryBox extends StatelessWidget {
+  const QueryBox({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final RxBool isQueryToggled = Get.find<ChatViewModel>().isQueryToggled!;
+    return Column(children: [
+      Obx(
+        () => Get.find<ChatViewModel>().isChatModelInitialized.value
+            ? SizedBox(
+                height: 20,
+                child: Switch(
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  activeColor: ThemeViewModel.idleColor,
+                  value: isQueryToggled.value,
+                  onChanged: (value) => isQueryToggled(value),
+                ),
+              )
+            : Container(),
+      ),
+      Row(
+        children: const [Icon(Icons.search), Text("Query")],
+      ),
     ]);
   }
 }
@@ -117,8 +164,19 @@ class UploadFileBox extends StatelessWidget {
         child: Row(children: const [
           Icon(Icons.document_scanner),
           SizedBox(width: 8),
-          Text('Embed\nDocument',
-              textAlign: TextAlign.left, style: TextStyle(fontSize: 12)),
+          Text.rich(
+            TextSpan(children: [
+              TextSpan(
+                text: 'Embed\n',
+                style: TextStyle(fontSize: 14),
+              ),
+              TextSpan(
+                text: 'Document',
+                style: TextStyle(fontSize: 10),
+              ),
+            ]),
+            textAlign: TextAlign.left,
+          ),
         ]),
       ),
     );
@@ -134,59 +192,49 @@ class TokenShowBox extends StatefulWidget {
 
 class _TokenShowBoxState extends State<TokenShowBox>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Color?> _animation;
+  late final AnimationController controller;
+  late final Animation<Color?> animation;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    controller = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
 
-    _animation = ColorTween(
-      begin: Colors.white,
-      end: ThemeViewModel.idleColor,
-    ).animate(_controller);
-
-    // Listen to the tokens value change
-    Get.find<ChatViewModel>().tokens.listen((_) {
-      _controller
-        ..reset()
-        ..forward();
-    });
+    animation = ColorTween(
+      begin: ThemeViewModel.idleColor,
+      end: Colors.white,
+    ).animate(controller);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          padding: const EdgeInsets.all(8),
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: _animation.value,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: child,
-        );
-      },
-      child: Obx(
-        () => Column(
+    final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
+
+    return Obx(() {
+      final tokens = chatViewModel.tokens.value.toString();
+      controller
+        ..reset()
+        ..forward();
+
+      return Container(
+        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              "You've spent",
+              "You used",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -197,13 +245,18 @@ class _TokenShowBoxState extends State<TokenShowBox>
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  Get.find<ChatViewModel>().tokens.value.toString(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                  maxLines: 1,
+                AnimatedBuilder(
+                  animation: controller,
+                  builder: (BuildContext context, Widget? child) {
+                    return Text(
+                      tokens,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: animation.value,
+                      ),
+                      maxLines: 1,
+                    );
+                  },
                 ),
                 const Text(
                   " Tokens",
@@ -217,8 +270,8 @@ class _TokenShowBoxState extends State<TokenShowBox>
             ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 }
 

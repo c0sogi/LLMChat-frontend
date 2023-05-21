@@ -23,6 +23,7 @@ class ChatMessagePlaceholder extends StatelessWidget {
     final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
     final bool isGptSpeaking =
         chatViewModel.messagePlaceholder[index].isGptSpeaking;
+    final width = MediaQuery.of(context).size.width;
     return Container(
       alignment: isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -31,9 +32,6 @@ class ChatMessagePlaceholder extends StatelessWidget {
             isGptSpeaking ? CrossAxisAlignment.start : CrossAxisAlignment.end,
         children: [
           Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.7,
-            ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: isGptSpeaking
@@ -52,6 +50,7 @@ class ChatMessagePlaceholder extends StatelessWidget {
             ),
             child: MarkdownWidget(
               text: chatViewModel.messagePlaceholder[index].message.value,
+              maxWidth: width - 750 > 0 ? 0.7 * (width - 300) : 0.7 * width,
             ),
           )
         ],
@@ -74,43 +73,40 @@ class ChatMessage extends StatelessWidget {
 
     return Container(
       alignment: isGptSpeaking ? Alignment.centerLeft : Alignment.centerRight,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isGptSpeaking ? Colors.grey[600] : Colors.blue[600],
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(12),
+          topRight: const Radius.circular(12),
+          bottomLeft: isGptSpeaking
+              ? const Radius.circular(0)
+              : const Radius.circular(12),
+          bottomRight: isGptSpeaking
+              ? const Radius.circular(12)
+              : const Radius.circular(0),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isGptSpeaking ? Colors.grey[600] : Colors.blue[600],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(12),
-            topRight: const Radius.circular(12),
-            bottomLeft: isGptSpeaking
-                ? const Radius.circular(0)
-                : const Radius.circular(12),
-            bottomRight: isGptSpeaking
-                ? const Radius.circular(12)
-                : const Radius.circular(0),
-          ),
-        ),
-        child: Obx(() {
-          SchedulerBinding.instance
-              .addPostFrameCallback(chatViewModel.scrollToBottomCallback);
-          if (chatViewModel.messages![index].isLoading.value) {
-            return Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.3,
-              ),
-              child: const Center(
-                child: LinearProgressIndicator(),
-              ),
-            );
-          }
-          return MarkdownWidget(
-            text: chatViewModel.messages![index].message.value,
-          );
-        }),
       ),
+      child: Obx(() {
+        SchedulerBinding.instance
+            .addPostFrameCallback(chatViewModel.scrollToBottomCallback);
+        if (chatViewModel.messages![index].isLoading.value) {
+          return Container(
+            constraints: const BoxConstraints(
+              maxWidth: 100,
+            ),
+            child: const Center(
+              child: LinearProgressIndicator(),
+            ),
+          );
+        }
+        final width = MediaQuery.of(context).size.width;
+        return MarkdownWidget(
+          text: chatViewModel.messages![index].message.value,
+          maxWidth: width - 750 > 0 ? 0.7 * (width - 300) : 0.7 * width,
+        );
+      }),
     );
   }
 }
@@ -214,26 +210,33 @@ class ChatMessage extends StatelessWidget {
 
 class MarkdownWidget extends StatelessWidget {
   final String text;
+  final double maxWidth;
   const MarkdownWidget({
-    Key? key,
+    super.key,
     required this.text,
-  }) : super(key: key);
+    required this.maxWidth,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MarkdownBody(
-      selectable: false,
-      fitContent: true,
-      data: text,
-      builders: {'pre': CodeblockBuilder()},
-      extensionSet: md.ExtensionSet.gitHubWeb,
-      styleSheet: MarkdownStyleSheet(
-        codeblockPadding: const EdgeInsets.symmetric(horizontal: 8),
-        codeblockDecoration: BoxDecoration(
-          color: Colors.blueGrey[800],
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(12),
-            topRight: Radius.circular(12),
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: maxWidth,
+      ),
+      child: MarkdownBody(
+        selectable: false,
+        fitContent: true,
+        data: text,
+        builders: {'pre': CodeblockBuilder()},
+        extensionSet: md.ExtensionSet.gitHubWeb,
+        styleSheet: MarkdownStyleSheet(
+          codeblockPadding: const EdgeInsets.symmetric(horizontal: 8),
+          codeblockDecoration: BoxDecoration(
+            color: Colors.blueGrey[800],
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+            ),
           ),
         ),
       ),
@@ -269,7 +272,7 @@ class CodeblockBuilder extends MarkdownElementBuilder {
 }
 
 class CodeblockHeader extends StatelessWidget {
-  const CodeblockHeader({
+  CodeblockHeader({
     super.key,
     required this.language,
     required this.text,
@@ -277,6 +280,14 @@ class CodeblockHeader extends StatelessWidget {
 
   final String? language;
   final md.Text text;
+  final isCheckMarkVisible = false.obs;
+
+  void copyToClipboard() async {
+    await Clipboard.setData(ClipboardData(text: text.textContent));
+    isCheckMarkVisible(true);
+    await Future.delayed(const Duration(seconds: 1));
+    isCheckMarkVisible(false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -286,21 +297,36 @@ class CodeblockHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(language ?? "", style: const TextStyle(color: Colors.white)),
-          Row(
-            children: [
-              const Icon(Icons.content_copy, size: 18),
-              TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Copied to clipboard'),
-                      ),
-                    );
-                    Clipboard.setData(ClipboardData(text: text.textContent));
-                  },
-                  child: const Text('Copy',
-                      style: TextStyle(color: Colors.white))),
-            ],
+          GestureDetector(
+            onTap: copyToClipboard,
+            child: Obx(
+              () => Row(
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: isCheckMarkVisible.value
+                        ? Icon(
+                            Icons.check_circle,
+                            key: UniqueKey(),
+                            color: Colors.green,
+                            size: 18,
+                          )
+                        : Icon(
+                            Icons.content_copy,
+                            key: UniqueKey(),
+                            color: Colors.grey,
+                            size: 18,
+                          ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 50,
+                    child: Text(isCheckMarkVisible.value ? "Copied!" : "Copy",
+                        style: const TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

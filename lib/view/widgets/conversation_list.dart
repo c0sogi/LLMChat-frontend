@@ -14,97 +14,93 @@ class ConversationList extends StatelessWidget {
     final LoginViewModel loginViewModel = Get.find<LoginViewModel>();
     final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
 
-    return Column(
-      children: [
-        Obx(
-          () => ListView.builder(
-            shrinkWrap: true,
-            itemCount: chatViewModel.chatRooms!.length,
-            itemBuilder: (context, index) {
-              final chatRoom = chatViewModel.chatRooms![index];
-              try {
-                chatRoom.chatRoomName(DateFormat('yyyy-MM-dd hh:mm a').format(
-                    DateTime.parse(chatRoom.chatRoomName.value).toLocal()));
-              } catch (_) {
-                // do nothing
-              }
-              return ListTile(
-                title: Row(
-                  children: [
-                    // add index num of chatroom as icon
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(Icons.chat),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Obx(
-                          () => chatRoom.isChatRoomNameEditing.value
-                              ? TextFormField(
-                                  initialValue: chatRoom.chatRoomName.value,
-                                  autofocus: true,
-                                  maxLength: 20,
-                                  onFieldSubmitted: (chatRoomName) {
-                                    chatRoom.isChatRoomNameEditing.value =
-                                        false;
-                                    chatRoom.chatRoomName.value = chatRoomName;
-                                    chatViewModel.sendJson!(
-                                        {"chat_room_name": chatRoomName});
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter chat room name here...',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  chatRoom.chatRoomName.value,
-                                  overflow: TextOverflow.fade,
-                                  maxLines: 1,
-                                  softWrap: false,
-                                ),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => chatRoom.isChatRoomNameEditing(
-                        !chatRoom.isChatRoomNameEditing.value,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete,
-                          color: ThemeViewModel.idleColor),
-                      onPressed: () => chatViewModel.deleteChatRoom!(
-                        chatRoomId: chatRoom.chatRoomId,
-                      ),
-                    ),
-                  ],
+    return Obx(
+      () => ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        itemCount: chatViewModel.chatRooms!.length,
+        itemBuilder: (context, index) {
+          final chatRoom = chatViewModel.chatRooms![index];
+          try {
+            chatRoom.chatRoomName(DateFormat('yyyy-MM-dd hh:mm a')
+                .format(DateTime.parse(chatRoom.chatRoomName.value).toLocal()));
+          } catch (_) {
+            // do nothing
+          }
+          return ListTile(
+            title: Row(
+              children: [
+                // add index num of chatroom as icon
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Icon(Icons.chat),
                 ),
-                onTap: () {
-                  // Handle conversation selection here
-                  if (loginViewModel.selectedApiKey.isEmpty) {
-                    Get.snackbar(
-                      'Error! API Key not selected.',
-                      'API Key를 선택해주세요.',
-                      backgroundColor: Colors.red,
-                      snackPosition: SnackPosition.BOTTOM,
-                      duration: const Duration(seconds: 1),
-                    );
-                    return;
-                  }
-                  chatViewModel.changeChatRoom!(
-                    chatRoomId: chatViewModel.chatRooms![index].chatRoomId,
-                  );
-                  loginViewModel.scaffoldKey.currentState!.closeDrawer();
-                },
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Obx(
+                      () => chatRoom.isChatRoomNameEditing.value
+                          ? TextFormField(
+                              initialValue: chatRoom.chatRoomName.value,
+                              autofocus: true,
+                              maxLength: 20,
+                              onFieldSubmitted: (chatRoomName) {
+                                chatRoom.isChatRoomNameEditing.value = false;
+                                chatRoom.chatRoomName.value = chatRoomName;
+                                chatViewModel.sendJson!(
+                                    {"chat_room_name": chatRoomName});
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Enter chat room name here...',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            )
+                          : Text(
+                              chatRoom.chatRoomName.value,
+                              overflow: TextOverflow.fade,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => chatRoom.isChatRoomNameEditing(
+                    !chatRoom.isChatRoomNameEditing.value,
+                  ),
+                ),
+                IconButton(
+                  icon:
+                      const Icon(Icons.delete, color: ThemeViewModel.idleColor),
+                  onPressed: () => chatViewModel.deleteChatRoom!(
+                    chatRoomId: chatRoom.chatRoomId,
+                  ),
+                ),
+              ],
+            ),
+            onTap: () {
+              // Handle conversation selection here
+              if (loginViewModel.selectedApiKey.isEmpty) {
+                Get.snackbar(
+                  'Error! API Key not selected.',
+                  'API Key를 선택해주세요.',
+                  backgroundColor: Colors.red,
+                  snackPosition: SnackPosition.BOTTOM,
+                  duration: const Duration(seconds: 1),
+                );
+                return;
+              }
+              chatViewModel.changeChatRoom!(
+                chatRoomId: chatViewModel.chatRooms![index].chatRoomId,
               );
+              loginViewModel.scaffoldKey.currentState?.closeDrawer();
             },
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 }

@@ -35,7 +35,7 @@ class ChatImageModel {
     var bytes = utf8.encode(emailTrimmed);
     var digest = md5.convert(bytes);
 
-    return 'https://www.gravatar.com/avatar/$digest?d=wavatar';
+    return 'https://www.gravatar.com/avatar/$digest?d=retro';
   }
 
   static void setUserImage(String email) {

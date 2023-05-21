@@ -2,10 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web/view/login/login_view.dart';
 import 'package:flutter_web/viewmodel/login/login_viewmodel.dart';
 import 'package:get/get.dart';
+import '../viewmodel/chat/chat_viewmodel.dart';
 import 'chat/chat_view.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const ResponsiveScaffold(
+      drawerContent: Drawer(
+        child: LoginDrawer(),
+      ),
+      bodyContent: ChatView(),
+    );
+  }
+}
+
+class ChatScaffold extends StatelessWidget {
+  const ChatScaffold({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +62,18 @@ class HomeScreen extends StatelessWidget {
             ]),
           ),
         ),
+        title: Obx(
+          () => Text(
+            Get.find<ChatViewModel>()
+                .selectedModel
+                .value
+                .replaceAll("_", " ")
+                .capitalizeFirst!,
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.right,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         actions: [
           Obx(
             () => loginViewModel.jwtToken.isEmpty
@@ -84,6 +111,40 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class ResponsiveScaffold extends StatelessWidget {
+  final Widget drawerContent;
+  final Widget bodyContent;
+
+  const ResponsiveScaffold({
+    super.key,
+    required this.drawerContent,
+    required this.bodyContent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth > 750) {
+          // Use a row layout for larger screen sizes
+          return Row(
+            children: [
+              SizedBox(
+                width: 300, // or whatever width you want the sidebar to have
+                child: drawerContent,
+              ),
+              Expanded(child: Material(child: bodyContent)),
+            ],
+          );
+        } else {
+          // Use a Scaffold with a Drawer for smaller screen sizes
+          return const ChatScaffold();
+        }
+      },
     );
   }
 }

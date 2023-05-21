@@ -36,6 +36,10 @@ class ChatViewModel extends GetxController {
   final ScrollController _scrollController = ScrollController();
   final RxInt tokens = 0.obs;
   final RxBool isChatModelInitialized = false.obs;
+  final RxString selectedModel = "".obs;
+  final RxBool isQuerying = false.obs;
+  final RxBool isTranslateToggled = false.obs;
+  final RxBool isQueryToggled = false.obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
       message:
@@ -48,9 +52,6 @@ class ChatViewModel extends GetxController {
   ];
 
   ScrollController get scrollController => _scrollController;
-  RxBool? get isQuerying => _chatModel?.isQuerying;
-  RxBool? get isTranslateToggled => _chatModel?.isTranslateToggled;
-  RxString? get selectedModel => _chatModel?.selectedModel;
   RxList<String>? get models => _chatModel?.models;
   RxList<MessageModel>? get messages => _chatModel?.messages;
   RxList<ChatRoomModel>? get chatRooms => _chatModel?.chatRooms;
@@ -60,7 +61,6 @@ class ChatViewModel extends GetxController {
   Function? get sendJson => _chatModel?.sendJson;
   Function? get resendUserMessage => _chatModel?.resendUserMessage;
   Function? get clearChat => _chatModel?.clearChat;
-  Function(bool)? get toggleTranslate => _chatModel?.toggleTranslate;
 
   @override
   void onInit() {
@@ -129,7 +129,13 @@ class ChatViewModel extends GetxController {
     if (isChatModelInitialized.value) {
       await _chatModel?.endChat();
     }
-    _chatModel = ChatModel(tokens: tokens);
+    _chatModel = ChatModel(
+      tokens: tokens,
+      selectedModel: selectedModel,
+      isQuerying: isQuerying,
+      isTranslateToggled: isTranslateToggled,
+      isQueryToggled: isQueryToggled,
+    );
     await _chatModel!.beginChat(apiKey);
     isChatModelInitialized(true);
   }
@@ -159,5 +165,9 @@ class ChatViewModel extends GetxController {
         file: result.files.single.bytes,
       );
     }
+  }
+
+  void triggerAnimation() {
+    tokens(tokens.value);
   }
 }
