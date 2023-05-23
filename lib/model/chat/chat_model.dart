@@ -40,8 +40,15 @@ class ChatModel {
     if (rcvd["chat_room_id"] != null && rcvd["chat_room_id"] != _chatRoomId) {
       _chatRoomId = rcvd["chat_room_id"];
       messages.clear();
+      final String chatRoomName = chatRooms
+          .firstWhere((element) => element.chatRoomId == _chatRoomId,
+              orElse: () => ChatRoomModel(chatRoomId: _chatRoomId ?? ""))
+          .chatRoomName
+          .value;
       addChatMessage(
-        message: "You are now in chat `$_chatRoomId`",
+        message: chatRoomName.isEmpty
+            ? "You are now in new chat"
+            : "You are now in chat **$chatRoomName**",
         isFinished: true,
         isGptSpeaking: true,
       );

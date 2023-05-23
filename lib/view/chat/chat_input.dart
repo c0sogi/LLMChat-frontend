@@ -76,7 +76,7 @@ class TranslateBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final RxBool isTranslateToggled =
-        Get.find<ChatViewModel>().isTranslateToggled!;
+        Get.find<ChatViewModel>().isTranslateToggled;
     return Column(children: [
       Obx(
         () => Get.find<ChatViewModel>().isChatModelInitialized.value
@@ -119,7 +119,7 @@ class QueryBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RxBool isQueryToggled = Get.find<ChatViewModel>().isQueryToggled!;
+    final RxBool isQueryToggled = Get.find<ChatViewModel>().isQueryToggled;
     return Column(children: [
       Obx(
         () => Get.find<ChatViewModel>().isChatModelInitialized.value
@@ -305,7 +305,7 @@ class MessageButtons extends StatelessWidget {
           ),
         ),
         Obx(
-          () => chatViewModel.isQuerying?.value ?? false
+          () => chatViewModel.isQuerying.value
               ? Tooltip(
                   message: "Stop query",
                   showDuration: const Duration(milliseconds: 0),

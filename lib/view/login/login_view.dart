@@ -95,7 +95,7 @@ class ModelSelectionDropdown extends StatelessWidget {
               }).toList(),
               onChanged: (String? value) {
                 if (value != null &&
-                    (!(Get.find<ChatViewModel>().isQuerying?.value ?? false))) {
+                    (!Get.find<ChatViewModel>().isQuerying.value)) {
                   chatViewModel.sendJson!({"model": value});
                 }
               },

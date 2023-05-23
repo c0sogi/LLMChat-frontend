@@ -272,7 +272,7 @@ class CodeblockBuilder extends MarkdownElementBuilder {
 }
 
 class CodeblockHeader extends StatelessWidget {
-  CodeblockHeader({
+  const CodeblockHeader({
     super.key,
     required this.language,
     required this.text,
@@ -280,14 +280,6 @@ class CodeblockHeader extends StatelessWidget {
 
   final String? language;
   final md.Text text;
-  final isCheckMarkVisible = false.obs;
-
-  void copyToClipboard() async {
-    await Clipboard.setData(ClipboardData(text: text.textContent));
-    isCheckMarkVisible(true);
-    await Future.delayed(const Duration(seconds: 1));
-    isCheckMarkVisible(false);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -297,36 +289,27 @@ class CodeblockHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(language ?? "", style: const TextStyle(color: Colors.white)),
-          GestureDetector(
-            onTap: copyToClipboard,
-            child: Obx(
-              () => Row(
-                children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: isCheckMarkVisible.value
-                        ? Icon(
-                            Icons.check_circle,
-                            key: UniqueKey(),
-                            color: Colors.green,
-                            size: 18,
-                          )
-                        : Icon(
-                            Icons.content_copy,
-                            key: UniqueKey(),
-                            color: Colors.grey,
-                            size: 18,
-                          ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 50,
-                    child: Text(isCheckMarkVisible.value ? "Copied!" : "Copy",
-                        style: const TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
+          Row(
+            children: [
+              const Icon(Icons.content_copy, size: 18),
+              TextButton(
+                  onPressed: () {
+                    Get.snackbar(
+                      'Copied!',
+                      '',
+                      snackStyle: SnackStyle.FLOATING,
+                      maxWidth: 150,
+                      padding: const EdgeInsets.only(top: 20),
+                      backgroundColor: Colors.green,
+                      snackPosition: SnackPosition.TOP,
+                      icon: const Icon(Icons.check, color: Colors.white),
+                      duration: const Duration(seconds: 1),
+                    );
+                    Clipboard.setData(ClipboardData(text: text.textContent));
+                  },
+                  child: const Text('Copy',
+                      style: TextStyle(color: Colors.white))),
+            ],
           ),
         ],
       ),
