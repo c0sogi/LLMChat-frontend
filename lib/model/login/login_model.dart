@@ -123,6 +123,7 @@ class LoginModel {
         },
         onFail: (dynamic bodyDecoded) async {
           if (bodyDecoded is Map && bodyDecoded["detail"] == "Token Expired") {
+            await logout();
             throw "Token expired. Please login again.";
           }
         },

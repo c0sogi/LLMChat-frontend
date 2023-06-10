@@ -125,8 +125,8 @@ class LoginForm extends StatelessWidget {
           const SizedBox(height: 30),
           FormBuilder(
             key: Get.find<LoginViewModel>().formKey,
-            child: Column(
-              children: const [
+            child: const Column(
+              children: [
                 EmailForm(),
                 SizedBox(height: 20),
                 PasswordForm(),
@@ -452,9 +452,9 @@ class CreateNewApiKey extends StatelessWidget {
       color: Theme.of(context).primaryColor,
       elevation: 5,
       child: ListTile(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.add,
               color: Colors.white,

@@ -50,11 +50,11 @@ class BottomToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: const [
+        children: [
           // Upload file button
           UploadFileBox(),
           // if (Localizations.localeOf(context) == const Locale('ko', 'KR'))
@@ -91,8 +91,8 @@ class TranslateBox extends StatelessWidget {
               )
             : Container(),
       ),
-      Row(
-        children: const [Icon(Icons.translate), Text("Traslate")],
+      const Row(
+        children: [Icon(Icons.translate), Text("Traslate")],
       ),
     ]);
   }
@@ -134,8 +134,8 @@ class QueryBox extends StatelessWidget {
               )
             : Container(),
       ),
-      Row(
-        children: const [Icon(Icons.search), Text("Query")],
+      const Row(
+        children: [Icon(Icons.search), Text("Query")],
       ),
     ]);
   }
@@ -161,7 +161,7 @@ class UploadFileBox extends StatelessWidget {
           ),
         ),
         onPressed: () => Get.find<ChatViewModel>().uploadFile(),
-        child: Row(children: const [
+        child: const Row(children: [
           Icon(Icons.document_scanner),
           SizedBox(width: 8),
           Text.rich(

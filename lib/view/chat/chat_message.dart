@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:flutter_highlighter/flutter_highlighter.dart';
 import 'package:flutter_highlighter/themes/atom-one-dark.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../app/app_config.dart';
 
 class ChatMessagePlaceholder extends StatelessWidget {
@@ -227,6 +228,31 @@ class MarkdownWidget extends StatelessWidget {
         selectable: false,
         fitContent: true,
         data: text,
+        onTapLink: (text, href, title) {
+          if (href != null) {
+            showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                      title: const Text("Open this link?"),
+                      content: Text(text),
+                      actions: <Widget>[
+                        FloatingActionButton(
+                          child: const Text('Yes'),
+                          onPressed: () {
+                            launchUrl(Uri.parse(href));
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        FloatingActionButton(
+                          child: const Text('No'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ));
+          }
+        },
         builders: {'pre': CodeblockBuilder()},
         extensionSet: md.ExtensionSet.gitHubWeb,
         styleSheet: MarkdownStyleSheet(
@@ -330,8 +356,7 @@ class CodeblockBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width:
-          MediaQueryData.fromWindow(WidgetsBinding.instance.window).size.width,
+      width: MediaQueryData.fromView(View.of(context)).size.width,
       child: HighlightView(
         text.textContent,
         language: language ?? "plaintext",

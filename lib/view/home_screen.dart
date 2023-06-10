@@ -103,8 +103,8 @@ class ChatScaffold extends StatelessWidget {
           child: LoginDrawer(),
         ),
       ),
-      body: Row(
-        children: const [
+      body: const Row(
+        children: [
           Expanded(
             flex: 3,
             child: ChatView(),

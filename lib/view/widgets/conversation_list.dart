@@ -116,9 +116,9 @@ class CreateNewConversation extends StatelessWidget {
       color: Theme.of(context).primaryColor,
       elevation: 5,
       child: ListTile(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.add,
               color: Colors.white,

@@ -4,6 +4,7 @@ class MessageModel {
   RxString message;
   bool isFinished;
   bool isGptSpeaking;
+  String? uuid;
   final RxBool isLoading;
   final DateTime dateTime;
   final RxString modelName;
@@ -15,6 +16,7 @@ class MessageModel {
     DateTime? datetime,
     bool? isLoading,
     String? modelName,
+    this.uuid,
   })  : message = message.obs,
         isLoading = (isLoading ?? false).obs,
         dateTime = datetime ?? DateTime.now(),

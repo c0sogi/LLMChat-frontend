@@ -8,7 +8,6 @@ import '../../viewmodel/chat/chat_viewmodel.dart';
 
 class ChatModel {
   WebSocketModel? webSocketModel;
-  bool _isTalking = false;
   bool _isInitialized = false;
   String? _chatRoomId;
   final RxInt tokens;
@@ -36,7 +35,6 @@ class ChatModel {
 
   void _messageHandler(dynamic rawText) {
     final Map<String, dynamic> rcvd = jsonDecode(rawText);
-    // print(rcvd);
     if (rcvd["chat_room_id"] != null && rcvd["chat_room_id"] != _chatRoomId) {
       _chatRoomId = rcvd["chat_room_id"];
       messages.clear();
@@ -53,11 +51,12 @@ class ChatModel {
         isGptSpeaking: true,
       );
     }
-    final bool isGptSpeaking = rcvd["is_user"] ? false : true;
+    // final bool isGptSpeaking = rcvd["is_user"] ? false : true;
     final String? message = rcvd["msg"];
     final bool isFinished = rcvd["finish"] ?? false;
     final bool init = rcvd["init"] ?? false;
     final String? modelName = rcvd["model_name"];
+    final String? uuid = rcvd["uuid"];
 
     if (init && message != null) {
       // message is list of messages in format of JSON, so we need to parse it
@@ -83,6 +82,7 @@ class ChatModel {
             isFinished: true,
             datetime: parseLocaltimeFromTimestamp(msg["timestamp"]),
             modelName: msg["model_name"],
+            uuid: msg["uuid"],
           );
         }
       }
@@ -103,15 +103,12 @@ class ChatModel {
       return;
     }
     message != null
-        ? _isTalking
-            ? _onMessageAppend(appendMessage: message, modelName: modelName)
-            : _onMessageCreate(
-                message: message,
-                isFinished: isFinished,
-                isGptSpeaking: isGptSpeaking,
-                modelName: modelName,
-              )
-        : _onNullMessage(modelName: modelName);
+        ? _onMessageAppend(
+            appendMessage: message,
+            modelName: modelName,
+            uuid: uuid,
+          )
+        : _onHandShake(modelName: modelName, uuid: uuid);
     if (isFinished) {
       _stopQuerying(finishedMessage: true);
     }
@@ -265,6 +262,7 @@ class ChatModel {
     bool? isLoading,
     DateTime? datetime,
     String? modelName,
+    String? uuid,
   }) {
     messages.add(MessageModel(
       message: message,
@@ -273,6 +271,7 @@ class ChatModel {
       isLoading: isLoading,
       datetime: datetime,
       modelName: modelName,
+      uuid: uuid,
     ));
   }
 
@@ -285,10 +284,17 @@ class ChatModel {
     }
   }
 
-  void _onMessageAppend({required String appendMessage, String? modelName}) {
-    final int index = messages.lastIndexWhere((mm) => mm.isFinished == false);
-    if (index != -1) {
-      messages[index].message(messages[index].message.value + appendMessage);
+  void _onMessageAppend(
+      {required String appendMessage, String? modelName, String? uuid}) {
+    if (messages.isNotEmpty && messages.last.isFinished == false) {
+      messages.last.message(messages.last.message.value + appendMessage);
+      messages.last.isLoading(false);
+      if (modelName != null) {
+        messages.last.modelName(modelName);
+      }
+      if (uuid != null) {
+        messages.last.uuid = uuid;
+      }
       return;
     }
     addChatMessage(
@@ -296,61 +302,21 @@ class ChatModel {
       isGptSpeaking: true,
       isFinished: false,
       modelName: modelName,
+      uuid: uuid,
     );
   }
 
-  void _onMessageCreate({
-    required String message,
-    required bool isFinished,
-    required bool isGptSpeaking,
-    String? modelName,
-  }) {
+  void _onHandShake({String? modelName, String? uuid}) {
     final int index =
         messages.lastIndexWhere((mm) => mm.isLoading.value == true);
-    // print("_onMessageCreate: $index");
-    if (index == -1) {
-      addChatMessage(
-        message: message,
-        isFinished: isFinished,
-        isGptSpeaking: isGptSpeaking,
-        modelName: modelName,
-      );
-      _isTalking = true;
+    if (index != -1) {
+      messages[index].modelName(modelName);
+      messages[index].uuid = uuid;
       return;
-    }
-    messages[index]
-      ..isGptSpeaking = isGptSpeaking
-      ..isFinished = isFinished
-      ..message(message)
-      ..isLoading(false)
-      ..modelName(modelName);
-    _isTalking = true;
-  }
-
-  void _onNullMessage({
-    String? modelName,
-  }) {
-    if (modelName != null) {
-      final int index =
-          messages.lastIndexWhere((mm) => mm.isLoading.value == true);
-      if (index != -1) {
-        messages[index].modelName(modelName);
-        return;
-      }
-    }
-    if (!_isTalking) {
-      addChatMessage(
-        message: "",
-        isFinished: false,
-        isGptSpeaking: true,
-        isLoading: true,
-        modelName: modelName,
-      );
     }
   }
 
   void _stopQuerying({required bool finishedMessage}) {
-    _isTalking = false;
     isQuerying(false);
     if (finishedMessage) {
       lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
