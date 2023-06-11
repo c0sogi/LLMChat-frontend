@@ -1,23 +1,40 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 
 class ChatImageModel {
   // static const AssetImage user = AssetImage(
   //   'assets/images/user_profile.png',
   // );
   static Rx<NetworkImage?> user = Rx<NetworkImage?>(null);
-  static const AssetImage openai = AssetImage(
-    'assets/images/openai_profile.png',
+  static const AssetImage openai =
+      AssetImage('assets/images/openai_profile.png');
+  static const AssetImage vicuna =
+      AssetImage('assets/images/vicuna_profile.png');
+  static const AssetImage ai = AssetImage('assets/images/ai_profile.png');
+
+  static SvgPicture searchWebSvg = SvgPicture.asset(
+    kReleaseMode ? 'assets/svgs/search-web.svg' : 'svgs/search-web.svg',
+    width: 20,
+    height: 20,
+    colorFilter: const ColorFilter.mode(
+      Colors.white,
+      BlendMode.srcIn,
+    ),
   );
-  static const AssetImage vicuna = AssetImage(
-    'assets/images/vicuna_profile.jpg',
-  );
-  static const AssetImage ai = AssetImage(
-    'assets/images/ai_profile.png',
-  );
+
+  static Map<String, TweenAnimationBuilder> lottieAnimationBuilders = {
+    "search-web": getLottieBuilder("lotties/search-web.json"),
+    "ok": getLottieBuilder("lotties/ok.json"),
+    "fail": getLottieBuilder("lotties/fail.json"),
+    "file-upload":
+        getLottieBuilder("lotties/file-upload.json", width: 48, height: 48),
+  };
 
   static AssetImage getLlmAssetImage(String modelName) {
     const List<String> openaiModels = ["gpt-3.5-turbo", "gpt-4", "gpt-4-32k"];
@@ -41,4 +58,27 @@ class ChatImageModel {
   static void setUserImage(String email) {
     user(NetworkImage(gravatarUrl(email)));
   }
+
+  static TweenAnimationBuilder getLottieBuilder(
+    String pathToJson, {
+    double width = 24,
+    double height = 24,
+  }) =>
+      TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: 1),
+        duration: const Duration(seconds: 2),
+        builder: (BuildContext context, double value, Widget? child) {
+          return Lottie.asset(
+            kReleaseMode ? "assets/$pathToJson" : pathToJson,
+            animate: true,
+            width: width,
+            height: height,
+            fit: BoxFit.cover,
+            frameRate: FrameRate.max,
+            repeat: false,
+            reverse: false,
+            controller: AlwaysStoppedAnimation(value),
+          );
+        },
+      );
 }

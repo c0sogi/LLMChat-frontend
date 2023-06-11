@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
@@ -257,12 +258,10 @@ class MarkdownWidget extends StatelessWidget {
         extensionSet: md.ExtensionSet.gitHubWeb,
         styleSheet: MarkdownStyleSheet(
           codeblockPadding: const EdgeInsets.symmetric(horizontal: 8),
-          codeblockDecoration: BoxDecoration(
-            color: Colors.blueGrey[800],
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
+          codeblockDecoration: const BoxDecoration(),
+          blockquoteDecoration: const BoxDecoration(
+            color: Colors.grey,
+            borderRadius: BorderRadius.all(Radius.circular(4)),
           ),
         ),
       ),
@@ -271,15 +270,17 @@ class MarkdownWidget extends StatelessWidget {
 }
 
 class CodeblockBuilder extends MarkdownElementBuilder {
-  String? language;
+  String language = "";
 
   @override
   void visitElementBefore(md.Element element) {
-    language = null;
+    language = "";
     element.children?.whereType<md.Element>().forEach((e) {
       final String? className =
           e.attributes['class']?.replaceFirst("language-", "");
-      if (className != null && Config.supportedLanguages.contains(className)) {
+      if (className != null &&
+          (className.startsWith("lottie-") ||
+              Config.supportedLanguages.contains(className))) {
         language = className;
       }
     });
@@ -287,13 +288,37 @@ class CodeblockBuilder extends MarkdownElementBuilder {
 
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CodeblockHeader(language: language, text: text),
-        CodeblockBody(text: text, language: language),
-      ],
-    );
+    return language.startsWith("lottie-")
+        ? RichText(
+            text: TextSpan(children: [
+            WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: ChatImageModel.lottieAnimationBuilders[
+                          language.replaceFirst("lottie-", "")] ??
+                      const Icon(Icons.error),
+                )),
+            TextSpan(
+                text: text.text.trim(),
+                style: TextStyle(color: preferredStyle?.color)),
+          ]))
+        : Container(
+            decoration: BoxDecoration(
+              color: Colors.blueGrey[800],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CodeblockHeader(language: language, text: text),
+                CodeblockBody(text: text, language: language),
+              ],
+            ),
+          );
   }
 }
 

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/animate.dart';
+import 'package:flutter_animate/effects/effects.dart';
 import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
@@ -61,7 +63,7 @@ class ChatView extends StatelessWidget {
                                         ? CrossAxisAlignment.start
                                         : CrossAxisAlignment.end,
                                 children: [
-                                  ChatMessage(index: index),
+                                  ChatMessage(index: index).animate().fade(),
                                   ChatBottomBox(
                                       message: chatViewModel.messages![index]),
                                 ],

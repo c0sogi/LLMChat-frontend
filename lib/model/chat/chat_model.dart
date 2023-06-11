@@ -15,18 +15,21 @@ class ChatModel {
   final RxBool isQuerying;
   final RxBool isTranslateToggled;
   final RxBool isQueryToggled;
+  final RxBool isBrowseToggled;
 
   final RxString selectedModel;
   final RxList<MessageModel> messages = <MessageModel>[].obs;
   final RxList<ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
   final RxList<String> models = <String>[].obs;
 
-  ChatModel(
-      {required this.tokens,
-      required this.selectedModel,
-      required this.isQuerying,
-      required this.isTranslateToggled,
-      required this.isQueryToggled});
+  ChatModel({
+    required this.tokens,
+    required this.selectedModel,
+    required this.isQuerying,
+    required this.isTranslateToggled,
+    required this.isQueryToggled,
+    required this.isBrowseToggled,
+  });
 
   bool get _ready =>
       !isQuerying.value &&
@@ -200,7 +203,11 @@ class ChatModel {
     );
     _startQuerying();
     webSocketModel!.sendJson({
-      "msg": isQueryToggled.value ? "/query $message" : message,
+      "msg": isQueryToggled.value
+          ? "/query $message"
+          : isBrowseToggled.value
+              ? "/browse $message"
+              : message,
       "translate": isTranslateToggled.value,
       "chat_room_id": _chatRoomId
     });
@@ -330,7 +337,7 @@ class ChatModel {
   Future<void> uploadFile({required String filename, Uint8List? file}) async {
     _startQuerying();
     addChatMessage(
-      message: "📄 **$filename**",
+      message: "\n```lottie-file-upload\n```\n**$filename**",
       isGptSpeaking: false,
       isFinished: true,
     );

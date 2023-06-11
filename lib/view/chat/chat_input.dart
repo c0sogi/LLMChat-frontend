@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
 import '../../viewmodel/chat/chat_viewmodel.dart';
@@ -50,33 +51,65 @@ class BottomToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.0),
+    final chatViewModel = Get.find<ChatViewModel>();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Upload file button
-          UploadFileBox(),
+          const UploadFileBox(),
           // if (Localizations.localeOf(context) == const Locale('ko', 'KR'))
-          TranslateBox(),
-          QueryBox(),
-          Expanded(child: SizedBox()),
-          TokenShowBox(),
+          ToggleBox(
+            icon: const SizedBox(width: 20, child: Icon(Icons.translate)),
+            text: "Translate",
+            isToggled: chatViewModel.isTranslateToggled,
+          ),
+          ToggleBox(
+            icon: const SizedBox(width: 20, child: Icon(Icons.search)),
+            text: "Query",
+            isToggled: chatViewModel.isQueryToggled,
+            onChanged: (isQueryToggled) {
+              if (isQueryToggled) {
+                chatViewModel.isBrowseToggled(false);
+              }
+              chatViewModel.isQueryToggled(isQueryToggled);
+            },
+          ),
+          ToggleBox(
+            icon: ChatImageModel.searchWebSvg,
+            text: "Browse",
+            isToggled: chatViewModel.isBrowseToggled,
+            onChanged: (isBrowseToggled) {
+              if (isBrowseToggled) {
+                chatViewModel.isQueryToggled(false);
+              }
+              chatViewModel.isBrowseToggled(isBrowseToggled);
+            },
+          ),
+          const Expanded(child: SizedBox()),
+          const TokenShowBox(),
         ],
       ),
     );
   }
 }
 
-class TranslateBox extends StatelessWidget {
-  const TranslateBox({
+class ToggleBox extends StatelessWidget {
+  final Widget icon;
+  final String text;
+  final RxBool isToggled;
+  final void Function(bool)? onChanged;
+  const ToggleBox({
     super.key,
+    required this.icon,
+    required this.text,
+    required this.isToggled,
+    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final RxBool isTranslateToggled =
-        Get.find<ChatViewModel>().isTranslateToggled;
     return Column(children: [
       Obx(
         () => Get.find<ChatViewModel>().isChatModelInitialized.value
@@ -85,57 +118,16 @@ class TranslateBox extends StatelessWidget {
                 child: Switch(
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   activeColor: ThemeViewModel.idleColor,
-                  value: isTranslateToggled.value,
-                  onChanged: (value) => isTranslateToggled(value),
+                  value: isToggled.value,
+                  onChanged: (value) => {
+                    onChanged == null ? isToggled.toggle() : onChanged!(value),
+                  },
                 ),
               )
             : Container(),
       ),
-      const Row(
-        children: [Icon(Icons.translate), Text("Traslate")],
-      ),
-    ]);
-  }
-}
-
-// const Text.rich(
-//   TextSpan(children: [
-//     TextSpan(
-//       text: '영어로\n',
-//       style: TextStyle(fontSize: 10),
-//     ),
-//     TextSpan(
-//       text: '번역',
-//       style: TextStyle(fontSize: 15),
-//     ),
-//   ]),
-//   textAlign: TextAlign.left,
-// ),
-
-class QueryBox extends StatelessWidget {
-  const QueryBox({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final RxBool isQueryToggled = Get.find<ChatViewModel>().isQueryToggled;
-    return Column(children: [
-      Obx(
-        () => Get.find<ChatViewModel>().isChatModelInitialized.value
-            ? SizedBox(
-                height: 20,
-                child: Switch(
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  activeColor: ThemeViewModel.idleColor,
-                  value: isQueryToggled.value,
-                  onChanged: (value) => isQueryToggled(value),
-                ),
-              )
-            : Container(),
-      ),
-      const Row(
-        children: [Icon(Icons.search), Text("Query")],
+      Row(
+        children: [icon, Text(text, style: const TextStyle(fontSize: 12))],
       ),
     ]);
   }
@@ -163,7 +155,6 @@ class UploadFileBox extends StatelessWidget {
         onPressed: () => Get.find<ChatViewModel>().uploadFile(),
         child: const Row(children: [
           Icon(Icons.document_scanner),
-          SizedBox(width: 8),
           Text.rich(
             TextSpan(children: [
               TextSpan(

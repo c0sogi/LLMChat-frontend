@@ -13,6 +13,7 @@ class Config {
   static const String postApiKeysUrl = "$httpUrl/api/user/apikeys";
 
   static const int scrollOffset = 0;
+
   static const List<String> supportedLanguages = [
     'abnf',
     'accesslog',

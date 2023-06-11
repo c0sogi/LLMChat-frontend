@@ -40,6 +40,7 @@ class ChatViewModel extends GetxController {
   final RxBool isQuerying = false.obs;
   final RxBool isTranslateToggled = false.obs;
   final RxBool isQueryToggled = false.obs;
+  final RxBool isBrowseToggled = false.obs;
   final List<MessageModel> messagePlaceholder = <MessageModel>[
     MessageModel(
       message:
@@ -135,6 +136,7 @@ class ChatViewModel extends GetxController {
       isQuerying: isQuerying,
       isTranslateToggled: isTranslateToggled,
       isQueryToggled: isQueryToggled,
+      isBrowseToggled: isBrowseToggled,
     );
     await _chatModel!.beginChat(apiKey);
     isChatModelInitialized(true);
