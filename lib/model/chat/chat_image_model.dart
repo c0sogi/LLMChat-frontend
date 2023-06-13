@@ -15,7 +15,7 @@ class ChatImageModel {
   static const AssetImage openai =
       AssetImage('assets/images/openai_profile.png');
   static const AssetImage vicuna =
-      AssetImage('assets/images/vicuna_profile.png');
+      AssetImage('assets/images/vicuna_profile.jpg');
   static const AssetImage ai = AssetImage('assets/images/ai_profile.png');
 
   static SvgPicture searchWebSvg = SvgPicture.asset(
@@ -34,6 +34,7 @@ class ChatImageModel {
     "fail": getLottieBuilder("lotties/fail.json"),
     "file-upload":
         getLottieBuilder("lotties/file-upload.json", width: 48, height: 48),
+    "translate": getLottieBuilder("lotties/translate.json"),
   };
 
   static AssetImage getLlmAssetImage(String modelName) {

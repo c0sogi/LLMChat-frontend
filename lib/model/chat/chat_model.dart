@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_web/model/chat/websocket_model.dart';
 import 'package:get/get.dart';
 import '../../app/app_config.dart';
+import '../../main.dart';
 import '../../model/message/message_model.dart';
 import '../../viewmodel/chat/chat_viewmodel.dart';
 
@@ -60,6 +61,7 @@ class ChatModel {
     final bool init = rcvd["init"] ?? false;
     final String? modelName = rcvd["model_name"];
     final String? uuid = rcvd["uuid"];
+    final bool? waitNextQuery = rcvd["wait_next_query"];
 
     if (init && message != null) {
       // message is list of messages in format of JSON, so we need to parse it
@@ -98,11 +100,8 @@ class ChatModel {
       if (initMsg["tokens"] != null) {
         tokens(initMsg["tokens"]);
       }
-      if (initMsg["wait_next_query"] ?? false) {
-        return;
-      }
       _isInitialized = true;
-      _stopQuerying(finishedMessage: false);
+      _stopQuerying(finishedMessage: false, waitNextQuery: waitNextQuery);
       return;
     }
     message != null
@@ -113,7 +112,7 @@ class ChatModel {
           )
         : _onHandShake(modelName: modelName, uuid: uuid);
     if (isFinished) {
-      _stopQuerying(finishedMessage: true);
+      _stopQuerying(finishedMessage: true, waitNextQuery: waitNextQuery);
     }
   }
 
@@ -159,11 +158,7 @@ class ChatModel {
       return;
     }
     _startQuerying();
-    webSocketModel!.sendJson({
-      "msg": "",
-      "translate": isTranslateToggled.value,
-      "chat_room_id": chatRoomId
-    });
+    webSocketModel!.sendJson({"msg": "", "chat_room_id": chatRoomId});
   }
 
   void deleteChatRoom({required String chatRoomId}) {
@@ -171,11 +166,8 @@ class ChatModel {
       return;
     }
     _startQuerying();
-    webSocketModel!.sendJson({
-      "msg": "/deletechatroom $chatRoomId",
-      "translate": isTranslateToggled.value,
-      "chat_room_id": _chatRoomId
-    });
+    webSocketModel!.sendJson(
+        {"msg": "/deletechatroom $chatRoomId", "chat_room_id": _chatRoomId});
   }
 
   void sendText(String text) {
@@ -208,7 +200,7 @@ class ChatModel {
           : isBrowseToggled.value
               ? "/browse $message"
               : message,
-      "translate": isTranslateToggled.value,
+      "translate": isTranslateToggled.value ? languageCode : null,
       "chat_room_id": _chatRoomId
     });
     return true;
@@ -234,7 +226,7 @@ class ChatModel {
     _startQuerying();
     webSocketModel!.sendJson({
       "msg": "/retry",
-      "translate": isTranslateToggled.value,
+      "translate": isTranslateToggled.value ? languageCode : null,
       "chat_room_id": _chatRoomId,
     });
   }
@@ -257,7 +249,6 @@ class ChatModel {
     _startQuerying();
     webSocketModel!.sendJson({
       "msg": "/clear",
-      "translate": isTranslateToggled.value,
       "chat_room_id": _chatRoomId,
     });
   }
@@ -321,12 +312,24 @@ class ChatModel {
       messages[index].uuid = uuid;
       return;
     }
+    addChatMessage(
+      message: "",
+      isFinished: false,
+      isGptSpeaking: true,
+      isLoading: true,
+      modelName: modelName,
+      uuid: uuid,
+    );
   }
 
-  void _stopQuerying({required bool finishedMessage}) {
-    isQuerying(false);
+  void _stopQuerying({required bool finishedMessage, bool? waitNextQuery}) {
     if (finishedMessage) {
       lastChatMessageWhere((mm) => mm.isFinished == false)?.isFinished = true;
+    }
+    if (waitNextQuery == true) {
+      return;
+    } else {
+      isQuerying(false);
     }
   }
 
@@ -337,7 +340,7 @@ class ChatModel {
   Future<void> uploadFile({required String filename, Uint8List? file}) async {
     _startQuerying();
     addChatMessage(
-      message: "\n```lottie-file-upload\n```\n**$filename**",
+      message: "\n```lottie-file-upload\n### File Uploaded!\n$filename\n```",
       isGptSpeaking: false,
       isFinished: true,
     );

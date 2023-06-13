@@ -226,7 +226,7 @@ class MarkdownWidget extends StatelessWidget {
         maxWidth: maxWidth,
       ),
       child: MarkdownBody(
-        selectable: false,
+        selectable: true,
         fitContent: true,
         data: text,
         onTapLink: (text, href, title) {
@@ -289,20 +289,40 @@ class CodeblockBuilder extends MarkdownElementBuilder {
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
     return language.startsWith("lottie-")
-        ? RichText(
-            text: TextSpan(children: [
-            WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+        ? Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.blueGrey[800],
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+            ),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF1A1A1A),
+                    shape: BoxShape.circle,
+                    border: Border.fromBorderSide(
+                      BorderSide(
+                        color: Colors.white,
+                        width: 2,
+                      ),
+                    ),
+                  ),
                   child: ChatImageModel.lottieAnimationBuilders[
                           language.replaceFirst("lottie-", "")] ??
                       const Icon(Icons.error),
-                )),
-            TextSpan(
-                text: text.text.trim(),
-                style: TextStyle(color: preferredStyle?.color)),
-          ]))
+                ),
+                Expanded(
+                  child: MarkdownBody(
+                      selectable: true,
+                      fitContent: true,
+                      data: text.text.trim()),
+                ),
+              ],
+            ),
+          )
         : Container(
             decoration: BoxDecoration(
               color: Colors.blueGrey[800],
