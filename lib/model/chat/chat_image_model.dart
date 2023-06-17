@@ -30,6 +30,11 @@ class ChatImageModel {
 
   static Map<String, TweenAnimationBuilder> lottieAnimationBuilders = {
     "search-web": getLottieBuilder("lotties/search-web.json"),
+    "search-doc": getLottieBuilder("lotties/search-doc.json"),
+    "read": getLottieBuilder("lotties/read.json"),
+    "go-back": getLottieBuilder("lotties/go-back.json"),
+    "click": getLottieBuilder("lotties/click.json"),
+    "scroll-down": getLottieBuilder("lotties/scroll-down.json"),
     "ok": getLottieBuilder("lotties/ok.json"),
     "fail": getLottieBuilder("lotties/fail.json"),
     "file-upload":
@@ -38,8 +43,7 @@ class ChatImageModel {
   };
 
   static AssetImage getLlmAssetImage(String modelName) {
-    const List<String> openaiModels = ["gpt-3.5-turbo", "gpt-4", "gpt-4-32k"];
-    if (openaiModels.contains(modelName)) {
+    if (modelName.startsWith("gpt-3.5") || modelName.startsWith("gpt-4")) {
       return openai;
     }
     if (modelName.isEmpty) {
@@ -62,8 +66,8 @@ class ChatImageModel {
 
   static TweenAnimationBuilder getLottieBuilder(
     String pathToJson, {
-    double width = 24,
-    double height = 24,
+    double width = 32,
+    double height = 32,
   }) =>
       TweenAnimationBuilder<double>(
         tween: Tween<double>(begin: 0, end: 1),

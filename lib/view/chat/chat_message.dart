@@ -298,7 +298,6 @@ class CodeblockBuilder extends MarkdownElementBuilder {
             child: Row(
               children: <Widget>[
                 Container(
-                  padding: const EdgeInsets.all(4),
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: const BoxDecoration(
                     color: Color(0xFF1A1A1A),

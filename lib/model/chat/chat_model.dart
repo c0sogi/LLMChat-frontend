@@ -55,7 +55,7 @@ class ChatModel {
         isGptSpeaking: true,
       );
     }
-    // final bool isGptSpeaking = rcvd["is_user"] ? false : true;
+    // final String? actualRole = rcvd["actual_role"];
     final String? message = rcvd["msg"];
     final bool isFinished = rcvd["finish"] ?? false;
     final bool init = rcvd["init"] ?? false;
@@ -83,7 +83,7 @@ class ChatModel {
             in List<Map<String, dynamic>>.from(initMsg["previous_chats"])) {
           addChatMessage(
             message: msg["content"] ?? "",
-            isGptSpeaking: msg["is_user"] ?? false ? false : true,
+            isGptSpeaking: msg["actual_role"] != "user" ? true : false,
             isFinished: true,
             datetime: parseLocaltimeFromTimestamp(msg["timestamp"]),
             modelName: msg["model_name"],
