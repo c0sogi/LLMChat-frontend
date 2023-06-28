@@ -45,10 +45,15 @@ class ConversationList extends StatelessWidget {
                               autofocus: true,
                               maxLength: 20,
                               onFieldSubmitted: (chatRoomName) {
-                                chatRoom.isChatRoomNameEditing.value = false;
-                                chatRoom.chatRoomName.value = chatRoomName;
-                                chatViewModel.sendJson!(
-                                    {"chat_room_name": chatRoomName});
+                                if (chatViewModel.isQuerying.value) {
+                                  return;
+                                }
+                                chatRoom.isChatRoomNameEditing(false);
+                                chatRoom.chatRoomName(chatRoomName);
+                                chatViewModel.sendJson!({
+                                  "chat_room_name": chatRoomName,
+                                  "chat_room_id": chatRoom.chatRoomId
+                                });
                               },
                               decoration: InputDecoration(
                                 hintText: 'Enter chat room name here...',
