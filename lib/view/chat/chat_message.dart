@@ -210,6 +210,41 @@ class ChatMessage extends StatelessWidget {
 //   }
 // }
 
+MarkdownStyleSheet markdownStyleSheet = MarkdownStyleSheet(
+  codeblockPadding: const EdgeInsets.symmetric(horizontal: 8),
+  codeblockDecoration: const BoxDecoration(),
+  blockquoteDecoration: const BoxDecoration(
+    color: Colors.grey,
+    borderRadius: BorderRadius.all(Radius.circular(4)),
+  ),
+);
+
+void onTapLink(String text, String? href, String? title, BuildContext context) {
+  if (href != null) {
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+              title: const Text("Open this link?"),
+              content: Text(text),
+              actions: <Widget>[
+                FloatingActionButton(
+                  child: const Text('Yes'),
+                  onPressed: () {
+                    launchUrl(Uri.parse(href));
+                    Navigator.of(context).pop();
+                  },
+                ),
+                FloatingActionButton(
+                  child: const Text('No'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ));
+  }
+}
+
 class MarkdownWidget extends StatelessWidget {
   final String text;
   final double maxWidth;
@@ -228,42 +263,12 @@ class MarkdownWidget extends StatelessWidget {
       child: MarkdownBody(
         selectable: true,
         fitContent: true,
+        softLineBreak: true,
         data: text,
-        onTapLink: (text, href, title) {
-          if (href != null) {
-            showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                      title: const Text("Open this link?"),
-                      content: Text(text),
-                      actions: <Widget>[
-                        FloatingActionButton(
-                          child: const Text('Yes'),
-                          onPressed: () {
-                            launchUrl(Uri.parse(href));
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                        FloatingActionButton(
-                          child: const Text('No'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ));
-          }
-        },
-        builders: {'pre': CodeblockBuilder()},
+        onTapLink: (text, href, title) => onTapLink(text, href, title, context),
+        builders: {'pre': CodeblockBuilder(context)},
         extensionSet: md.ExtensionSet.gitHubWeb,
-        styleSheet: MarkdownStyleSheet(
-          codeblockPadding: const EdgeInsets.symmetric(horizontal: 8),
-          codeblockDecoration: const BoxDecoration(),
-          blockquoteDecoration: const BoxDecoration(
-            color: Colors.grey,
-            borderRadius: BorderRadius.all(Radius.circular(4)),
-          ),
-        ),
+        styleSheet: markdownStyleSheet,
       ),
     );
   }
@@ -271,6 +276,9 @@ class MarkdownWidget extends StatelessWidget {
 
 class CodeblockBuilder extends MarkdownElementBuilder {
   String language = "";
+  final BuildContext context;
+
+  CodeblockBuilder(this.context);
 
   @override
   void visitElementBefore(md.Element element) {
@@ -315,9 +323,16 @@ class CodeblockBuilder extends MarkdownElementBuilder {
                 ),
                 Expanded(
                   child: MarkdownBody(
-                      selectable: true,
-                      fitContent: true,
-                      data: text.text.trim()),
+                    selectable: true,
+                    fitContent: true,
+                    softLineBreak: true,
+                    data: text.text.trim(),
+                    onTapLink: (text, href, title) =>
+                        onTapLink(text, href, title, context),
+                    builders: {'pre': CodeblockBuilder(context)},
+                    extensionSet: md.ExtensionSet.gitHubWeb,
+                    styleSheet: markdownStyleSheet,
+                  ),
                 ),
               ],
             ),
