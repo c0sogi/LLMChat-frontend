@@ -285,6 +285,7 @@ class ChatModel {
   void _onMessageAppend(
       {required String appendMessage, String? modelName, String? uuid}) {
     if (messages.isNotEmpty && messages.last.isFinished == false) {
+      // append message to last message if it is not finished
       messages.last.message(messages.last.message.value + appendMessage);
       messages.last.isLoading(false);
       if (modelName != null) {
@@ -295,6 +296,12 @@ class ChatModel {
       }
       return;
     }
+    // if empty or last message is finished
+    if (appendMessage.isEmpty) {
+      // do nothing if message is empty
+      return;
+    }
+    // add new message if message is not empty
     addChatMessage(
       message: appendMessage,
       isGptSpeaking: true,
