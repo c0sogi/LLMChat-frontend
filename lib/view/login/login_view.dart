@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_web/model/chat/chat_image_model.dart';
+import 'package:flutter_web/model/chat/chat_model.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -109,7 +110,10 @@ class ModelSelectionDropdown extends StatelessWidget {
               onChanged: (String? value) {
                 if (value != null &&
                     (!Get.find<ChatViewModel>().isQuerying.value)) {
-                  chatViewModel.sendJson!({"model": value});
+                  chatViewModel.performChatAction!(
+                    action: ChatAction.changeChatModel,
+                    chatModelName: value,
+                  );
                 }
               },
             ),

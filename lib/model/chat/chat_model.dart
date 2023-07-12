@@ -2,10 +2,20 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_web/model/chat/websocket_model.dart';
 import 'package:get/get.dart';
+import 'package:uuid/uuid.dart';
 import '../../app/app_config.dart';
 import '../../main.dart';
 import '../../model/message/message_model.dart';
 import '../../viewmodel/chat/chat_viewmodel.dart';
+
+enum ChatAction {
+  changeChatModel,
+  changeChatRoom,
+  changeChatRoomName,
+  deleteChatRoom,
+  deleteMessage,
+  interruptChat;
+}
 
 class ChatModel {
   WebSocketModel? webSocketModel;
@@ -142,50 +152,70 @@ class ChatModel {
   }
 
   Future<void> endChat() async {
-    if (webSocketModel != null) {
-      // print("ending chat");
-      await webSocketModel!.close();
-      addChatMessage(
-        message: 'Disconnected from server.',
-        isGptSpeaking: true,
-        isFinished: true,
-      );
-    }
+    if (webSocketModel == null) return;
+    await webSocketModel!.close();
+    addChatMessage(
+      message: 'Disconnected from server.',
+      isGptSpeaking: true,
+      isFinished: true,
+    );
   }
 
-  void changeChatRoom({required String chatRoomId}) {
-    if (!_ready || _chatRoomId == chatRoomId) {
-      return;
-    }
+  void performChatAction({
+    required ChatAction action,
+    String? chatRoomId,
+    String? chatRoomName,
+    String? chatModelName,
+    String? messageRole,
+    String? messageUuid,
+  }) {
+    if (!_ready) return;
+
     _startQuerying();
-    webSocketModel!.sendJson({"msg": "", "chat_room_id": chatRoomId});
-  }
+    switch (action) {
+      case ChatAction.changeChatRoom:
+        if (_chatRoomId == chatRoomId) return;
+        webSocketModel!.sendJson({
+          "msg": "",
+          "chat_room_id": chatRoomId,
+        });
+        break;
 
-  void deleteChatRoom({required String chatRoomId}) {
-    if (!_ready) {
-      return;
+      case ChatAction.deleteChatRoom:
+        webSocketModel!.sendJson({
+          "msg": "/deletechatroom $chatRoomId",
+          "chat_room_id": _chatRoomId,
+        });
+        break;
+
+      case ChatAction.deleteMessage:
+        webSocketModel!.sendJson({
+          "msg": "/deletemessage $messageRole $messageUuid",
+          "chat_room_id": _chatRoomId,
+        });
+        break;
+      case ChatAction.changeChatModel:
+        webSocketModel!.sendJson({"model": chatModelName});
+        break;
+      case ChatAction.changeChatRoomName:
+        webSocketModel!.sendJson({
+          "chat_room_name": chatRoomName,
+          "chat_room_id": chatRoomId,
+        });
+        break;
+      case ChatAction.interruptChat:
+        webSocketModel!.sendText("stop");
     }
-    _startQuerying();
-    webSocketModel!.sendJson(
-        {"msg": "/deletechatroom $chatRoomId", "chat_room_id": _chatRoomId});
-  }
-
-  void sendText(String text) {
-    webSocketModel?.sendText(text);
-  }
-
-  void sendJson(Map<String, dynamic> json) {
-    webSocketModel?.sendJson(json);
   }
 
   bool sendUserMessage({required String message}) {
-    if (!_ready) {
-      return false;
-    }
+    if (!_ready) return false;
+    final String uuid = const Uuid().v4().replaceAll("-", "");
     addChatMessage(
       message: message,
       isGptSpeaking: false,
       isFinished: true,
+      uuid: uuid,
     );
     addChatMessage(
       message: "",
@@ -201,22 +231,19 @@ class ChatModel {
               ? "/browse $message"
               : message,
       "translate": isTranslateToggled.value ? languageCode : null,
-      "chat_room_id": _chatRoomId
+      "chat_room_id": _chatRoomId,
+      "uuid": uuid,
     });
     return true;
   }
 
   void resendUserMessage() {
-    // Implement resend message logic
-    if (!_ready) {
-      return;
-    }
+    if (!_ready) return;
 
-    final String? lastUserMessage =
-        lastChatMessageWhere((mm) => mm.isGptSpeaking == false)?.message.value;
-    if (lastUserMessage == null) {
-      return;
-    }
+    if (lastChatMessageWhere((mm) => mm.isGptSpeaking == false)
+            ?.message
+            .value ==
+        null) return;
     addChatMessage(
       message: "",
       isGptSpeaking: true,

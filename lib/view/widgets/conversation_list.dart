@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web/model/chat/chat_model.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:flutter_web/viewmodel/login/login_viewmodel.dart';
@@ -50,10 +51,11 @@ class ConversationList extends StatelessWidget {
                                 }
                                 chatRoom.isChatRoomNameEditing(false);
                                 chatRoom.chatRoomName(chatRoomName);
-                                chatViewModel.sendJson!({
-                                  "chat_room_name": chatRoomName,
-                                  "chat_room_id": chatRoom.chatRoomId
-                                });
+                                chatViewModel.performChatAction!(
+                                  action: ChatAction.changeChatRoomName,
+                                  chatRoomId: chatRoom.chatRoomId,
+                                  chatRoomName: chatRoomName,
+                                );
                               },
                               decoration: InputDecoration(
                                 hintText: 'Enter chat room name here...',
@@ -80,7 +82,8 @@ class ConversationList extends StatelessWidget {
                 IconButton(
                   icon:
                       const Icon(Icons.delete, color: ThemeViewModel.idleColor),
-                  onPressed: () => chatViewModel.deleteChatRoom!(
+                  onPressed: () => chatViewModel.performChatAction!(
+                    action: ChatAction.deleteChatRoom,
                     chatRoomId: chatRoom.chatRoomId,
                   ),
                 ),
@@ -98,7 +101,8 @@ class ConversationList extends StatelessWidget {
                 );
                 return;
               }
-              chatViewModel.changeChatRoom!(
+              chatViewModel.performChatAction!(
+                action: ChatAction.changeChatRoom,
                 chatRoomId: chatViewModel.chatRooms![index].chatRoomId,
               );
               loginViewModel.scaffoldKey.currentState?.closeDrawer();
@@ -146,7 +150,10 @@ class CreateNewConversation extends StatelessWidget {
         tileColor: Theme.of(context).secondaryHeaderColor,
         onTap: () {
           final newChatRoomId = const Uuid().v4().replaceAll('-', '');
-          Get.find<ChatViewModel>().changeChatRoom!(chatRoomId: newChatRoomId);
+          Get.find<ChatViewModel>().performChatAction!(
+            action: ChatAction.changeChatRoom,
+            chatRoomId: newChatRoomId,
+          );
         },
       ),
     );

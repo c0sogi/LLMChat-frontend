@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/animate.dart';
 import 'package:flutter_animate/effects/effects.dart';
 import 'package:flutter_web/model/chat/chat_image_model.dart';
+import 'package:flutter_web/model/chat/chat_model.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
@@ -92,10 +93,7 @@ class ChatView extends StatelessWidget {
 }
 
 class ChatBottomBox extends StatelessWidget {
-  const ChatBottomBox({
-    super.key,
-    required this.message,
-  });
+  const ChatBottomBox({super.key, required this.message});
 
   final MessageModel message;
 
@@ -104,11 +102,16 @@ class ChatBottomBox extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (!message.isGptSpeaking)
+        if (!message.isGptSpeaking) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: CopyToClipboardButton(message: message),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: DeleteMessageButton(message: message),
+          ),
+        ],
         Text(
           DateFormat('MMM d, yyyy, h:mm a').format(message.dateTime),
           style: const TextStyle(
@@ -116,20 +119,23 @@ class ChatBottomBox extends StatelessWidget {
             color: Colors.grey,
           ),
         ),
-        if (message.isGptSpeaking)
+        if (message.isGptSpeaking) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: DeleteMessageButton(message: message),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: CopyToClipboardButton(message: message),
           ),
+        ],
       ],
     );
   }
 }
 
 class UserChatProfile extends StatelessWidget {
-  const UserChatProfile({
-    super.key,
-  });
+  const UserChatProfile({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -144,10 +150,7 @@ class UserChatProfile extends StatelessWidget {
 }
 
 class AIChatProfile extends StatelessWidget {
-  const AIChatProfile({
-    super.key,
-    required this.message,
-  });
+  const AIChatProfile({super.key, required this.message});
 
   final MessageModel message;
 
@@ -201,11 +204,14 @@ class CopyToClipboardButton extends StatelessWidget {
         return Row(
           children: [
             if (!message.isGptSpeaking)
-              Text(
-                isCheckMarkVisible.value ? "Copied!" : "Copy to clipboard",
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
+              Padding(
+                padding: const EdgeInsets.only(right: 3.0, bottom: 2.0),
+                child: Text(
+                  isCheckMarkVisible.value ? "Copied!" : "Copy",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             AnimatedSwitcher(
@@ -215,26 +221,74 @@ class CopyToClipboardButton extends StatelessWidget {
                       Icons.check_circle,
                       key: UniqueKey(),
                       color: Colors.green,
-                      size: 18,
+                      size: 16,
                     )
                   : Icon(
                       Icons.content_copy,
                       key: UniqueKey(),
                       color: Colors.grey,
-                      size: 18,
+                      size: 16,
                     ),
             ),
             if (message.isGptSpeaking)
-              Text(
-                isCheckMarkVisible.value ? "Copied!" : "Copy to clipboard",
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
+              Padding(
+                padding: const EdgeInsets.only(left: 3.0, bottom: 2.0),
+                child: Text(
+                  isCheckMarkVisible.value ? "Copied!" : "Copy",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
           ],
         );
       }),
+    );
+  }
+}
+
+class DeleteMessageButton extends StatelessWidget {
+  final MessageModel message;
+  const DeleteMessageButton({super.key, required this.message});
+
+  void deleteMessage() async {
+    final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
+    if (message.uuid == null) return;
+    final int index = chatViewModel.messages!
+        .indexWhere((element) => element.uuid == message.uuid);
+    if (index == -1) return;
+    chatViewModel.messages!.removeAt(index);
+    chatViewModel.performChatAction!(
+      action: ChatAction.deleteMessage,
+      messageRole: message.isGptSpeaking ? "ai" : "user",
+      messageUuid: message.uuid,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: deleteMessage,
+      child: Row(
+        children: [
+          if (!message.isGptSpeaking)
+            const Text(
+              "Delete",
+              style: TextStyle(fontSize: 14, color: Colors.red),
+            ),
+          const Icon(
+            Icons.delete_forever,
+            color: Colors.redAccent,
+            size: 20,
+          ),
+          if (message.isGptSpeaking)
+            const Text(
+              "Delete",
+              style: TextStyle(fontSize: 14, color: Colors.red),
+            ),
+        ],
+      ),
     );
   }
 }

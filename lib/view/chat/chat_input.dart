@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web/model/chat/chat_image_model.dart';
+import 'package:flutter_web/model/chat/chat_model.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:get/get.dart';
 import '../../viewmodel/chat/chat_viewmodel.dart';
@@ -301,7 +302,9 @@ class MessageButtons extends StatelessWidget {
                   message: "Stop query",
                   showDuration: const Duration(milliseconds: 0),
                   child: IconButton(
-                    onPressed: () => chatViewModel.sendText!("stop"),
+                    onPressed: () => chatViewModel.performChatAction!(
+                      action: ChatAction.interruptChat,
+                    ),
                     icon: const Icon(Icons.stop),
                   ),
                 )

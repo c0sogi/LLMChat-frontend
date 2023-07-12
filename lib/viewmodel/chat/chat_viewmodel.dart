@@ -56,10 +56,14 @@ class ChatViewModel extends GetxController {
   RxList<String>? get models => _chatModel?.models;
   RxList<MessageModel>? get messages => _chatModel?.messages;
   RxList<ChatRoomModel>? get chatRooms => _chatModel?.chatRooms;
-  Function? get changeChatRoom => _chatModel?.changeChatRoom;
-  Function? get deleteChatRoom => _chatModel?.deleteChatRoom;
-  Function? get sendText => _chatModel?.sendText;
-  Function? get sendJson => _chatModel?.sendJson;
+  void Function({
+    required ChatAction action,
+    String? chatRoomId,
+    String? chatRoomName,
+    String? chatModelName,
+    String? messageRole,
+    String? messageUuid,
+  })? get performChatAction => _chatModel?.performChatAction;
   Function? get resendUserMessage => _chatModel?.resendUserMessage;
   Function? get clearChat => _chatModel?.clearChat;
 
