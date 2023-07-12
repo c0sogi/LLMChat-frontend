@@ -169,7 +169,7 @@ class ChatModel {
     String? messageRole,
     String? messageUuid,
   }) {
-    if (!_ready) return;
+    if (!_ready && action != ChatAction.interruptChat) return;
 
     _startQuerying();
     switch (action) {
