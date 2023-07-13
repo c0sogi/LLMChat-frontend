@@ -169,9 +169,11 @@ class ChatModel {
     String? messageRole,
     String? messageUuid,
   }) {
-    if (!_ready && action != ChatAction.interruptChat) return;
+    if (action != ChatAction.interruptChat) {
+      if (!_ready) return;
+      _startQuerying();
+    }
 
-    _startQuerying();
     switch (action) {
       case ChatAction.changeChatRoom:
         if (_chatRoomId == chatRoomId) return;
