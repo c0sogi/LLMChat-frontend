@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web/utils/string_formatter.dart';
 import 'package:flutter_web/view/login/login_view.dart';
 import 'package:flutter_web/viewmodel/login/login_viewmodel.dart';
 import 'package:get/get.dart';
@@ -64,11 +65,9 @@ class ChatScaffold extends StatelessWidget {
         ),
         title: Obx(
           () => Text(
-            Get.find<ChatViewModel>()
-                .selectedModel
-                .value
-                .replaceAll("_", " ")
-                .capitalizeFirst!,
+            chatModelNameFormatter(
+              Get.find<ChatViewModel>().selectedModel.value,
+            ),
             style: const TextStyle(fontSize: 16),
             textAlign: TextAlign.right,
             overflow: TextOverflow.ellipsis,

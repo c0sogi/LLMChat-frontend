@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_web/model/chat/chat_image_model.dart';
 import 'package:flutter_web/model/chat/chat_model.dart';
+import 'package:flutter_web/utils/string_formatter.dart';
 import 'package:flutter_web/viewmodel/chat/chat_viewmodel.dart';
 import 'package:flutter_web/viewmodel/chat/theme_viewmodel.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -55,19 +56,6 @@ class ModelSelectionDropdown extends StatelessWidget {
     super.key,
   });
 
-  String modelNameFormatter(String text) => text
-      .replaceAllMapped(
-        RegExp(r'(\d+)_(\d+)'),
-        (match) => '${match[1]}.${match[2]}',
-      )
-      .replaceAll('_', ' ')
-      .replaceAll('gpt', 'GPT')
-      .split(' ')
-      .map((str) => str.contains(RegExp(r'\d+[bk]'))
-          ? str.replaceFirst('b', 'B').replaceFirst('k', 'K')
-          : '${str[0].toUpperCase()}${str.substring(1)}')
-      .join(' ');
-
   @override
   Widget build(BuildContext context) {
     final ChatViewModel chatViewModel = Get.find<ChatViewModel>();
@@ -100,7 +88,7 @@ class ModelSelectionDropdown extends StatelessWidget {
                   alignment: Alignment.center,
                   value: menuItem,
                   child: Text(
-                    modelNameFormatter(menuItem),
+                    chatModelNameFormatter(menuItem),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.white),

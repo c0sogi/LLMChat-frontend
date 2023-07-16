@@ -268,27 +268,29 @@ class DeleteMessageButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: deleteMessage,
-      child: Row(
-        children: [
-          if (!message.isGptSpeaking)
-            const Text(
-              "Delete",
-              style: TextStyle(fontSize: 14, color: Colors.red),
+    return message.uuid != null
+        ? GestureDetector(
+            onTap: deleteMessage,
+            child: Row(
+              children: [
+                if (!message.isGptSpeaking)
+                  const Text(
+                    "Delete",
+                    style: TextStyle(fontSize: 14, color: Colors.red),
+                  ),
+                const Icon(
+                  Icons.delete_forever,
+                  color: Colors.redAccent,
+                  size: 20,
+                ),
+                if (message.isGptSpeaking)
+                  const Text(
+                    "Delete",
+                    style: TextStyle(fontSize: 14, color: Colors.red),
+                  ),
+              ],
             ),
-          const Icon(
-            Icons.delete_forever,
-            color: Colors.redAccent,
-            size: 20,
-          ),
-          if (message.isGptSpeaking)
-            const Text(
-              "Delete",
-              style: TextStyle(fontSize: 14, color: Colors.red),
-            ),
-        ],
-      ),
-    );
+          )
+        : const SizedBox();
   }
 }

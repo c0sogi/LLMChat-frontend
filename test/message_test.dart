@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:uuid/uuid.dart';
 
 void main() {
   for (int i = 0; i < 10; i++) {
-    print(getUuid());
+    log(getUuid(), zone: Zone.current);
   }
 }
 
